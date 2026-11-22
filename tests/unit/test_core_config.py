@@ -11,6 +11,7 @@ from analisador.core.config import (
     ENCODING_SAMPLE_BYTES,
     FALLBACK_ENCODINGS,
     HEADER_SCAN_MAX_ROWS,
+    HEADER_SIMILARITY_THRESHOLD,
     HIGH_CONFIDENCE_THRESHOLD,
     IQR_OUTLIER_MULTIPLIER,
     MAX_DETECTION_SCORE,
@@ -60,6 +61,8 @@ def test_detection_weights_and_thresholds_are_consistent() -> None:
         < HIGH_CONFIDENCE_THRESHOLD
         < MAX_DETECTION_SCORE
     )
+    assert MIN_RATIO < HEADER_SIMILARITY_THRESHOLD <= MAX_RATIO
+    assert HEADER_SIMILARITY_THRESHOLD == 0.85
 
 
 def test_analytics_and_ui_constants() -> None:
