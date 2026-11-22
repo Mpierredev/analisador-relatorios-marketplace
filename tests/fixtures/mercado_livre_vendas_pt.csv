@@ -1,0 +1,6 @@
+Relatório de vendas - Loja Sintética
+Período,01/10/2026 a 31/10/2026
+
+N.º de venda,Data da venda,Estado,Título do anúncio,SKU,Unidades,Preço unitário de venda do anúncio,Receita por produtos (BRL),Tarifa de venda e impostos,Tarifas de envio,Total (BRL)
+2000009001,15/10/2026 14:20,Entregue,Mochila Impermeável Notebook 15,MOCH-NB-15,1,"189,90","189,90","24,69","19,90","145,31"
+2000009002,16/10/2026 09:45,Cancelada pelo comprador,Garrafa Térmica Inox 750ml,GAR-750-PR,2,"69,90","139,80","0,00","0,00","0,00"

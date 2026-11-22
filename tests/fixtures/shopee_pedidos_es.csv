@@ -1,0 +1,3 @@
+ID de pedido;Estado del pedido;Fecha de creación del pedido;Nombre del producto;N.º de referencia de SKU;Cantidad;Precio de oferta;Monto total del pedido;Tarifa de comisión;Tarifa de envío pagada por el comprador
+261017ES001;Completado;2026-10-17 16:05;Teclado Compacto Inalámbrico;TEC-WL-03;1;219,00;219,00;26,28;18,00
+261017ES002;Por enviar;2026-10-17 18:20;Alfombrilla Escritorio Grande;PAD-XL-01;2;49,90;99,80;11,98;10,00

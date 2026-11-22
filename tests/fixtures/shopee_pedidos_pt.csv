@@ -1,0 +1,3 @@
+ID do pedido;Status do pedido;Data de criação do pedido;Nome do Produto;Número de referência SKU;Quantidade;Preço original;Valor total do pedido;Taxa de comissão;Taxa de envio paga pelo comprador
+261015ABC001;Concluído;2026-10-15 10:25;Fone Bluetooth Compacto;FONE-BT-01;2;99,90;199,80;23,98;14,50
+261015ABC002;Cancelado;2026-10-15 14:40;Cabo USB-C Trançado 2m;CABO-USBC-2M;1;34,90;34,90;4,19;0,00

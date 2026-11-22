@@ -1,0 +1,3 @@
+codigo_transacao,data_compra,situacao_envio,descricao_item,qtd_itens,valor_bruto_venda,taxa_plataforma
+TRX-9001,2026-10-21,Despachado,Webcam Full HD 1080p,1,199.00,25.87
+TRX-9002,2026-10-21,Concluido,Microfone Condensador USB,2,149.50,38.87
