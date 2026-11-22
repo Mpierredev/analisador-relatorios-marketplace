@@ -9,6 +9,11 @@ e este projeto adota o [Versionamento Semântico](https://semver.org/lang/pt-BR/
 
 ### Adicionado
 
+- Mecanismo declarativo de adapters, normalização de cabeçalhos/status e registro em `src/analisador/adapters/`.
+- Adapters declarativos da Shopee e do Mercado Livre com aliases em português, inglês e espanhol e documentação em `docs/formatos-suportados.md`.
+- Pontuação de similaridade e detecção de adapters em `src/analisador/validation/detection.py`.
+- Constante `HEADER_SIMILARITY_THRESHOLD` em `src/analisador/core/config.py`.
+- Fixtures sintéticos em `tests/fixtures/` e testes unitários em `tests/unit/test_adapters.py` e `tests/unit/test_validation_detection.py`.
 - Detecção de encoding (`UTF-8`, `UTF-8` com BOM, `UTF-16` e `Latin-1`/`cp1252`) em `src/analisador/ingestion/encoding.py`.
 - Detecção de separador (`,`, `;`, tabulação) e linha de cabeçalho com metadados ou linhas vazias iniciais em `src/analisador/ingestion/structure.py`.
 - Leitura em memória de `.csv` e `.xlsx` com limites de tamanho e linhas em `src/analisador/ingestion/reader.py`.
