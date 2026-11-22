@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Qualidade e testes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependências de desenvolvimento
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Verificar lint com Ruff
+        run: ruff check .
+
+      - name: Verificar formatação com Ruff
+        run: ruff format --check .
+
+      - name: Verificar tipagem com mypy
+        run: mypy
+
+      - name: Executar testes com cobertura
+        run: pytest --cov
