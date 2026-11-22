@@ -1,0 +1,56 @@
+"""Named constants and operational limits for report processing."""
+
+from decimal import Decimal
+from typing import Final
+
+BYTES_PER_MEGABYTE: Final[int] = 1024 * 1024
+MAX_FILE_SIZE_MB: Final[int] = 25
+MAX_FILE_SIZE_BYTES: Final[int] = MAX_FILE_SIZE_MB * BYTES_PER_MEGABYTE
+MAX_ROWS: Final[int] = 200_000
+SUPPORTED_EXTENSIONS: Final[frozenset[str]] = frozenset({".csv", ".xlsx"})
+DEFAULT_TIMEZONE: Final[str] = "America/Sao_Paulo"
+
+MIN_QUANTITY: Final[int] = 1
+MIN_RATIO: Final[float] = 0.0
+MAX_RATIO: Final[float] = 1.0
+
+REQUIRED_FIELD_WEIGHT: Final[float] = 0.7
+OPTIONAL_FIELD_WEIGHT: Final[float] = 0.2
+CONFLICT_FIELD_PENALTY: Final[float] = 0.1
+MIN_DETECTION_SCORE: Final[float] = MIN_RATIO
+MAX_DETECTION_SCORE: Final[float] = MAX_RATIO
+HIGH_CONFIDENCE_THRESHOLD: Final[float] = 0.85
+MEDIUM_CONFIDENCE_THRESHOLD: Final[float] = 0.50
+
+IQR_OUTLIER_MULTIPLIER: Final[float] = 1.5
+ABC_CLASS_A_LIMIT: Final[Decimal] = Decimal("0.80")
+ABC_CLASS_B_LIMIT: Final[Decimal] = Decimal("0.95")
+
+PREVIEW_ROW_COUNT: Final[int] = 20
+CACHE_MAX_ENTRIES: Final[int] = 16
+CACHE_TTL_SECONDS: Final[int] = 300
+
+__all__ = [
+    "ABC_CLASS_A_LIMIT",
+    "ABC_CLASS_B_LIMIT",
+    "BYTES_PER_MEGABYTE",
+    "CACHE_MAX_ENTRIES",
+    "CACHE_TTL_SECONDS",
+    "CONFLICT_FIELD_PENALTY",
+    "DEFAULT_TIMEZONE",
+    "HIGH_CONFIDENCE_THRESHOLD",
+    "IQR_OUTLIER_MULTIPLIER",
+    "MAX_DETECTION_SCORE",
+    "MAX_FILE_SIZE_BYTES",
+    "MAX_FILE_SIZE_MB",
+    "MAX_RATIO",
+    "MAX_ROWS",
+    "MEDIUM_CONFIDENCE_THRESHOLD",
+    "MIN_DETECTION_SCORE",
+    "MIN_QUANTITY",
+    "MIN_RATIO",
+    "OPTIONAL_FIELD_WEIGHT",
+    "PREVIEW_ROW_COUNT",
+    "REQUIRED_FIELD_WEIGHT",
+    "SUPPORTED_EXTENSIONS",
+]
