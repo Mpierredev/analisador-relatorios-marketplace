@@ -6,7 +6,7 @@ Projeto sem banco de dados, sem login, sem armazenamento de arquivos e com custo
 
 ## Estado atual
 
-Etapa 0 concluída: estrutura inicial de pastas, configuração de ferramentas de qualidade (Ruff, mypy, pytest), hooks de pre-commit e integração contínua no GitHub Actions. As funcionalidades do analisador ainda estão em desenvolvimento.
+Etapa 1 concluída: núcleo de domínio implementado em `src/analisador/core/` (constantes de configuração, enums, hierarquia de erros `ReportError`, esquema canônico e modelos de relatório com testes unitários). As camadas de leitura, adapters e interface Streamlit serão implementadas nas próximas etapas.
 
 ## Arquitetura
 

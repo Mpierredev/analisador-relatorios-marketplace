@@ -2,19 +2,20 @@
 
 ## Etapa concluída
 
-- **Etapa 0 (Preparação)**: projeto organizado na raiz `analisador-relatorios-marketplace`, repositório remoto público `Mpierredev/analisador-relatorios-marketplace` criado no GitHub, estrutura de pastas, `LICENSE`, `.gitignore`, `.editorconfig`, `README.md`, `pyproject.toml`, `.pre-commit-config.yaml`, CI no GitHub Actions, `CHANGELOG.md` e teste smoke validados.
+- **Etapa 1 (Núcleo e esquema)**: implementados na branch `feat/nucleo-esquema` os módulos de `src/analisador/core/` (`config.py`, `enums.py`, `errors.py`, `schema.py`, `models.py` e `__init__.py`), testes unitários em `tests/unit/test_core_*.py`, ADR `docs/decisoes/001-modelos-core-sem-dependencias.md` e atualizações em `README.md` e `CHANGELOG.md`.
 
 ## Decisões tomadas
 
-- Diretório local `plan/` mantido fora do controle de versão e listado no `.gitignore`.
-- Build backend configurado com `hatchling` e layout `src/analisador`, sem dependências de runtime na Etapa 0.
-- Teste smoke em `tests/unit/test_package.py` para validar empacotamento e meta de cobertura >= 85%.
+- Núcleo implementado apenas com biblioteca padrão (`dataclasses` imutáveis com `slots=True`, `StrEnum`, `Decimal` e `MappingProxyType`), sem dependências externas.
+- Campos de identificador de marketplace nos modelos usam `str` compatível com `Marketplace(StrEnum)` para permitir novos adapters sem alterar `core/`.
+- Validação mínima de entrada exige `order_date`, `product_name`, `quantity` e ao menos um campo monetário (`gross_revenue` ou `unit_price`).
 
 ## O que está pendente
 
-- Acompanhar a execução inicial do workflow de CI no GitHub Actions.
-- Instalar e ativar hooks locais com `pre-commit install`.
+- Revisar, integrar a branch `feat/nucleo-esquema` em `main` (via PR ou merge) e enviar ao repositório remoto.
+- Acompanhar execução do CI no GitHub Actions após atualização do remoto.
+- Instalar hooks locais com `pre-commit install`.
 
 ## Próximos passos
 
-- Iniciar a **Etapa 1 (Núcleo e esquema)**: definir esquema canônico, enums de status, constantes em `core/config.py`, hierarquia `ReportError`, modelos (`ValidationReport`, `QualityReport`, `KpiSummary`) e testes unitários.
+- Iniciar a **Etapa 2 (Leitura de arquivos)**: implementar detecção de encoding, separador e cabeçalho, leitura de CSV e XLSX em memória e limites em `src/analisador/ingestion/`.
