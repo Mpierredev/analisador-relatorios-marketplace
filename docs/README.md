@@ -6,7 +6,7 @@ O projeto opera com custo de infraestrutura R$ 0, sem banco de dados, sem login 
 
 ## Recursos
 
-- **Leitura automática em memória**: aceita `.csv` e `.xlsx`, detecta encoding (`UTF-8`, `UTF-8` com BOM e `Latin-1`/`cp1252`), separador (vírgula, ponto e vírgula ou tabulação) e linha de cabeçalho mesmo com metadados iniciais.
+- **Leitura automática em memória**: aceita `.csv` e `.xlsx`, detecta encoding (`UTF-8`, `UTF-8` com BOM, `UTF-16` e `Latin-1`/`cp1252`), separador (vírgula, ponto e vírgula ou tabulação) e linha de cabeçalho mesmo com metadados iniciais.
 - **Validação estrutural e mapeamento manual**: pontua compatibilidade com os formatos conhecidos, lista colunas encontradas ou ausentes e oferece mapeamento manual no modo CSV genérico.
 - **Normalização e qualidade dos dados**: padroniza datas, valores monetários, quantidades e status em um esquema canônico e gera relatório de qualidade (duplicidades, nulos, datas inválidas e outliers).
 - **Dashboard e exportação**: calcula indicadores de vendas, séries temporais, ranking de produtos, curva ABC, comparação de períodos e exportação dos dados tratados em CSV e Excel.
@@ -55,4 +55,4 @@ pytest --cov
 
 ## Licença
 
-Distribuído sob a licença MIT. Consulte [LICENSE](LICENSE).
+Distribuído sob a licença MIT. Consulte [LICENSE](../LICENSE).
