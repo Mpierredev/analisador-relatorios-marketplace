@@ -8,6 +8,12 @@ MAX_FILE_SIZE_MB: Final[int] = 25
 MAX_FILE_SIZE_BYTES: Final[int] = MAX_FILE_SIZE_MB * BYTES_PER_MEGABYTE
 MAX_ROWS: Final[int] = 200_000
 SUPPORTED_EXTENSIONS: Final[frozenset[str]] = frozenset({".csv", ".xlsx"})
+SUPPORTED_SEPARATORS: Final[tuple[str, ...]] = (",", ";", "\t")
+ENCODING_SAMPLE_BYTES: Final[int] = 65_536
+HEADER_SCAN_MAX_ROWS: Final[int] = 30
+MIN_HEADER_COLUMNS: Final[int] = 2
+UTF8_BOM_ENCODING: Final[str] = "utf-8-sig"
+FALLBACK_ENCODINGS: Final[tuple[str, ...]] = ("utf-8", "cp1252", "latin-1")
 DEFAULT_TIMEZONE: Final[str] = "America/Sao_Paulo"
 
 MIN_QUANTITY: Final[int] = 1
@@ -38,6 +44,9 @@ __all__ = [
     "CACHE_TTL_SECONDS",
     "CONFLICT_FIELD_PENALTY",
     "DEFAULT_TIMEZONE",
+    "ENCODING_SAMPLE_BYTES",
+    "FALLBACK_ENCODINGS",
+    "HEADER_SCAN_MAX_ROWS",
     "HIGH_CONFIDENCE_THRESHOLD",
     "IQR_OUTLIER_MULTIPLIER",
     "MAX_DETECTION_SCORE",
@@ -47,10 +56,13 @@ __all__ = [
     "MAX_ROWS",
     "MEDIUM_CONFIDENCE_THRESHOLD",
     "MIN_DETECTION_SCORE",
+    "MIN_HEADER_COLUMNS",
     "MIN_QUANTITY",
     "MIN_RATIO",
     "OPTIONAL_FIELD_WEIGHT",
     "PREVIEW_ROW_COUNT",
     "REQUIRED_FIELD_WEIGHT",
     "SUPPORTED_EXTENSIONS",
+    "SUPPORTED_SEPARATORS",
+    "UTF8_BOM_ENCODING",
 ]

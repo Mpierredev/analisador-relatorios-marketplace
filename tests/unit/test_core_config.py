@@ -8,6 +8,9 @@ from analisador.core.config import (
     CACHE_TTL_SECONDS,
     CONFLICT_FIELD_PENALTY,
     DEFAULT_TIMEZONE,
+    ENCODING_SAMPLE_BYTES,
+    FALLBACK_ENCODINGS,
+    HEADER_SCAN_MAX_ROWS,
     HIGH_CONFIDENCE_THRESHOLD,
     IQR_OUTLIER_MULTIPLIER,
     MAX_DETECTION_SCORE,
@@ -17,12 +20,15 @@ from analisador.core.config import (
     MAX_ROWS,
     MEDIUM_CONFIDENCE_THRESHOLD,
     MIN_DETECTION_SCORE,
+    MIN_HEADER_COLUMNS,
     MIN_QUANTITY,
     MIN_RATIO,
     OPTIONAL_FIELD_WEIGHT,
     PREVIEW_ROW_COUNT,
     REQUIRED_FIELD_WEIGHT,
     SUPPORTED_EXTENSIONS,
+    SUPPORTED_SEPARATORS,
+    UTF8_BOM_ENCODING,
 )
 
 
@@ -31,6 +37,12 @@ def test_operational_limits_and_extensions() -> None:
     assert MAX_FILE_SIZE_BYTES == MAX_FILE_SIZE_MB * BYTES_PER_MEGABYTE
     assert MAX_ROWS == 200_000
     assert set(SUPPORTED_EXTENSIONS) == {".csv", ".xlsx"}
+    assert list(SUPPORTED_SEPARATORS) == [",", ";", "\t"]
+    assert ENCODING_SAMPLE_BYTES == 65_536
+    assert HEADER_SCAN_MAX_ROWS == 30
+    assert MIN_HEADER_COLUMNS == 2
+    assert UTF8_BOM_ENCODING == "utf-8-sig"
+    assert list(FALLBACK_ENCODINGS) == ["utf-8", "cp1252", "latin-1"]
     assert DEFAULT_TIMEZONE == "America/Sao_Paulo"
     assert MIN_QUANTITY == 1
 
