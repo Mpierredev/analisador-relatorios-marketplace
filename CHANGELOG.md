@@ -9,6 +9,11 @@ e este projeto adota o [Versionamento Semântico](https://semver.org/lang/pt-BR/
 
 ### Adicionado
 
+- Inferência de tipos de coluna e sugestão automática de mapeamento genérico em `src/analisador/validation/types.py` e `src/analisador/validation/suggestions.py`.
+- Validação estrutural para adapters e mapeamento manual em `src/analisador/validation/validator.py` e `src/analisador/validation/generic.py`, gerando `ValidationReport` com bloqueio explícito via `ensure_can_generate_dashboard`.
+- Alias observado `Preço unitário de venda do anúncio (BRL)` no adapter do Mercado Livre (`docs/formatos-suportados.md`).
+- Constantes `TYPE_INFERENCE_SAMPLE_ROWS` e `GENERIC_NAME_SIMILARITY_THRESHOLD` em `src/analisador/core/config.py`.
+- Testes unitários de sugestão e validação em `tests/unit/test_validation_suggestions.py` e `tests/unit/test_validation_validator.py`.
 - Mecanismo declarativo de adapters, normalização de cabeçalhos/status e registro em `src/analisador/adapters/`.
 - Adapters declarativos da Shopee e do Mercado Livre com aliases em português, inglês e espanhol e documentação em `docs/formatos-suportados.md`.
 - Pontuação de similaridade e detecção de adapters em `src/analisador/validation/detection.py`.
