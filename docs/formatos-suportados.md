@@ -35,7 +35,7 @@ Antes da comparação com cada adapter, todos os cabeçalhos passam por normaliz
 ## Mercado Livre (`mercado_livre`)
 
 - **Tipo de relatório:** Relatório de vendas
-- **Data da observação:** `2026-11-22`
+- **Data da observação:** `2026-11-23`
 - **Compatibilidade:** Exportações de vendas do Mercado Livre e Mercado Libre em português, espanhol e inglês.
 
 ### Colunas aceitas
@@ -49,7 +49,7 @@ Antes da comparação com cada adapter, todos os cabeçalhos passam por normaliz
 | `order_id` | Não | `N.º de venda`, `Nº de venda`, `N° de venda`, `Número da venda`, `ID da venda`, `N.º de venta`, `Nº de venta`, `N° de venta`, `Número de venta`, `ID de venta`, `Sale Number`, `Order Number` |
 | `status` | Não | `Estado`, `Status da venda`, `Estado de la venta`, `Status`, `Sale Status` |
 | `sku` | Não | `SKU`, `Código SKU` |
-| `unit_price` | Não | `Preço unitário de venda do anúncio`, `Preço unitário`, `Precio unitario de venta de la publicación`, `Precio unitario`, `Unit Price` |
+| `unit_price` | Não | `Preço unitário de venda do anúncio (BRL)`, `Preço unitário de venda do anúncio`, `Preço unitário`, `Precio unitario de venta de la publicación`, `Precio unitario`, `Unit Price` |
 | `fees` | Não | `Tarifa de venda e impostos`, `Tarifa de venda`, `Tarifa`, `Cargo por venta e impuestos`, `Cargo por venta`, `Comisión`, `Selling Fee and Taxes`, `Selling Fee` |
 | `shipping_cost` | Não | `Tarifas de envio`, `Tarifa de envio`, `Custo de envio`, `Costos de envío`, `Tarifas de envío`, `Costo de envío`, `Shipping Cost`, `Shipping Fee` |
 | `net_revenue` | Não | `Total (BRL)`, `Valor líquido`, `Total líquido`, `Total`, `Monto recibido`, `Monto neto`, `Net Revenue`, `Total Received` |

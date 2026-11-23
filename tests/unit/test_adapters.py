@@ -50,8 +50,10 @@ def test_builtin_adapters_declare_metadata_and_compatibility_notes() -> None:
     with pytest.raises(KeyError, match="Unknown marketplace adapter"):
         get_adapter("amazon")
 
+    assert SHOPEE_ADAPTER.observed_at == "2026-11-22"
+    assert MERCADO_LIVRE_ADAPTER.observed_at == "2026-11-23"
+
     for adapter in REGISTERED_ADAPTERS:
-        assert adapter.observed_at == "2026-11-22"
         assert "compatível com exportações observadas" in (
             adapter.compatibility_note.lower()
         )

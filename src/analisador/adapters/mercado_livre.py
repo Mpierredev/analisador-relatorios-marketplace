@@ -15,7 +15,7 @@ MERCADO_LIVRE_ADAPTER: Final[MarketplaceAdapter] = MarketplaceAdapter(
     key=Marketplace.MERCADO_LIVRE,
     display_name="Mercado Livre",
     report_type="Relatório de vendas",
-    observed_at="2026-11-22",
+    observed_at="2026-11-23",
     compatibility_note=(
         "Compatível com exportações observadas do relatório de vendas do Mercado Livre "
         "e Mercado Libre. Não representa especificação oficial da plataforma."
@@ -74,6 +74,7 @@ MERCADO_LIVRE_ADAPTER: Final[MarketplaceAdapter] = MarketplaceAdapter(
             "Código SKU",
         ),
         CanonicalField.UNIT_PRICE: (
+            "Preço unitário de venda do anúncio (BRL)",
             "Preço unitário de venda do anúncio",
             "Preço unitário",
             "Precio unitario de venta de la publicación",
