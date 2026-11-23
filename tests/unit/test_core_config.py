@@ -10,6 +10,7 @@ from analisador.core.config import (
     DEFAULT_TIMEZONE,
     ENCODING_SAMPLE_BYTES,
     FALLBACK_ENCODINGS,
+    GENERIC_NAME_SIMILARITY_THRESHOLD,
     HEADER_SCAN_MAX_ROWS,
     HEADER_SIMILARITY_THRESHOLD,
     HIGH_CONFIDENCE_THRESHOLD,
@@ -29,6 +30,7 @@ from analisador.core.config import (
     REQUIRED_FIELD_WEIGHT,
     SUPPORTED_EXTENSIONS,
     SUPPORTED_SEPARATORS,
+    TYPE_INFERENCE_SAMPLE_ROWS,
     UTF8_BOM_ENCODING,
 )
 
@@ -63,6 +65,9 @@ def test_detection_weights_and_thresholds_are_consistent() -> None:
     )
     assert MIN_RATIO < HEADER_SIMILARITY_THRESHOLD <= MAX_RATIO
     assert HEADER_SIMILARITY_THRESHOLD == 0.85
+    assert MIN_RATIO < GENERIC_NAME_SIMILARITY_THRESHOLD <= MAX_RATIO
+    assert GENERIC_NAME_SIMILARITY_THRESHOLD == 0.72
+    assert TYPE_INFERENCE_SAMPLE_ROWS == 50
 
 
 def test_analytics_and_ui_constants() -> None:
