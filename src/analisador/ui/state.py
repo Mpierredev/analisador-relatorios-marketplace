@@ -18,6 +18,9 @@ STATE_PREVIOUS_FORMAT: Final[str] = "analisador.previous_format"
 STATE_PENDING_FORMAT: Final[str] = "analisador.pending_format"
 STATE_UPLOAD_SIGNATURE: Final[str] = "analisador.upload_signature"
 STATE_FILE_NAME: Final[str] = "analisador.file_name"
+STATE_AVAILABLE_SHEETS: Final[str] = "analisador.available_sheets"
+STATE_SELECTED_SHEET: Final[str] = "analisador.selected_sheet"
+STATE_MULTI_SHEET_BYTES: Final[str] = "analisador.multi_sheet_bytes"
 STATE_RAW_DF: Final[str] = "analisador.raw_df"
 STATE_MANUAL_MAPPING: Final[str] = "analisador.manual_mapping"
 STATE_VALIDATION_REPORT: Final[str] = "analisador.validation_report"
@@ -54,6 +57,9 @@ def init_session_state() -> None:
         STATE_PREVIOUS_FORMAT: default_fmt,
         STATE_UPLOAD_SIGNATURE: None,
         STATE_FILE_NAME: None,
+        STATE_AVAILABLE_SHEETS: (),
+        STATE_SELECTED_SHEET: None,
+        STATE_MULTI_SHEET_BYTES: None,
         STATE_RAW_DF: None,
         STATE_MANUAL_MAPPING: {},
         STATE_VALIDATION_REPORT: None,
@@ -76,6 +82,9 @@ def reset_analysis_state() -> None:
     """Clear uploaded file, validation report, manual mapping, and dashboard."""
     st.session_state[STATE_UPLOAD_SIGNATURE] = None
     st.session_state[STATE_FILE_NAME] = None
+    st.session_state[STATE_AVAILABLE_SHEETS] = ()
+    st.session_state[STATE_SELECTED_SHEET] = None
+    st.session_state[STATE_MULTI_SHEET_BYTES] = None
     st.session_state[STATE_RAW_DF] = None
     st.session_state[STATE_MANUAL_MAPPING] = {}
     st.session_state[STATE_VALIDATION_REPORT] = None
@@ -102,15 +111,18 @@ def get_workflow_stage() -> WorkflowStage:
 
 
 __all__ = [
+    "STATE_AVAILABLE_SHEETS",
     "STATE_DASHBOARD_ENABLED",
     "STATE_FILE_NAME",
     "STATE_LAST_ERROR",
     "STATE_MANUAL_MAPPING",
+    "STATE_MULTI_SHEET_BYTES",
     "STATE_NORMALIZED_RESULT",
     "STATE_PENDING_FORMAT",
     "STATE_PREVIOUS_FORMAT",
     "STATE_RAW_DF",
     "STATE_SELECTED_FORMAT",
+    "STATE_SELECTED_SHEET",
     "STATE_UPLOAD_SIGNATURE",
     "STATE_VALIDATION_REPORT",
     "WorkflowStage",

@@ -10,7 +10,12 @@ from streamlit.testing.v1 import AppTest
 
 from analisador.core.enums import CanonicalField, Marketplace
 from analisador.core.errors import UnsupportedFileError
-from analisador.ui.services import process_uploaded_file, translate_exception
+from analisador.ui.samples import list_sample_assets, load_sample_bytes
+from analisador.ui.services import (
+    generate_normalized_result,
+    process_uploaded_file,
+    translate_exception,
+)
 from analisador.ui.state import (
     STATE_DASHBOARD_ENABLED,
     STATE_FILE_NAME,
@@ -195,3 +200,38 @@ def test_visual_error_state_renders_safely_without_traceback() -> None:
     assert len(at.error) == 1
     assert "Extensão .pdf não é aceita." in at.error[0].value
     assert len(at.info) == 1
+
+
+def test_bundled_samples_validate_one_click_demo_and_help_downloads() -> None:
+    assets = list_sample_assets()
+    assert len(assets) == 3
+
+    for asset in assets:
+        content = load_sample_bytes(asset)
+        raw_df, report = process_uploaded_file(
+            content, asset.filename, asset.format_key
+        )
+        if asset.format_key == Marketplace.GENERIC.value:
+            from analisador.validation import suggest_column_mapping
+
+            suggested = suggest_column_mapping(raw_df)
+            raw_df, report = process_uploaded_file(
+                content,
+                asset.filename,
+                asset.format_key,
+                manual_mapping=suggested,
+            )
+        assert report.can_generate_dashboard is True
+        normalized = generate_normalized_result(raw_df, report)
+        assert normalized.quality_report.valid_rows > 0
+
+    at = AppTest.from_function(_run_analyze_page, default_timeout=15).run()
+    at.button(key="btn_load_sample_mercado_livre").click().run()
+    assert not at.exception
+    assert at.button(key="btn_generate_dashboard").disabled is False
+    at.button(key="btn_generate_dashboard").click().run()
+    assert not at.exception
+    assert at.session_state[STATE_DASHBOARD_ENABLED] is True
+
+    help_page = AppTest.from_function(_run_how_to_export_page, default_timeout=15).run()
+    assert not help_page.exception

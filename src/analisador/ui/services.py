@@ -6,6 +6,7 @@ import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -34,7 +35,7 @@ from analisador.core.config import (
 from analisador.core.enums import CanonicalField
 from analisador.core.errors import ReportError
 from analisador.core.models import KpiSummary, ValidationReport
-from analisador.ingestion import read_report
+from analisador.ingestion import list_xlsx_sheets, read_report
 from analisador.normalization import NormalizationResult, normalize_report
 from analisador.validation import ensure_can_generate_dashboard, validate_report
 
@@ -86,14 +87,28 @@ def translate_exception(exc: Exception) -> UiError:
     )
 
 
+def detect_xlsx_sheets(content: bytes, filename: str) -> tuple[str, ...]:
+    """Return sheet names for XLSX uploads, or empty tuple for CSV files."""
+    if Path(filename).suffix.lower() != ".xlsx" or not content:
+        return ()
+    return list_xlsx_sheets(content)
+
+
 def process_uploaded_file(
     content: bytes,
     filename: str,
     selected_format: str,
+    *,
+    sheet_name: str | None = None,
+    manual_mapping: Mapping[CanonicalField, str] | None = None,
 ) -> tuple[pd.DataFrame, ValidationReport]:
     """Read raw report bytes in memory and run initial structural validation."""
-    raw_df = read_report(content, filename)
-    validation = validate_report(raw_df, selected_format)
+    raw_df = read_report(content, filename, sheet_name=sheet_name)
+    validation = validate_report(
+        raw_df,
+        selected_format,
+        manual_mapping=manual_mapping,
+    )
     return raw_df, validation
 
 
@@ -208,6 +223,7 @@ __all__ = [
     "DashboardBundle",
     "UiError",
     "compute_dashboard_bundle_cached",
+    "detect_xlsx_sheets",
     "generate_normalized_result",
     "process_uploaded_file",
     "revalidate_dataframe",

@@ -6,13 +6,19 @@ import pandas as pd
 import streamlit as st
 
 from analisador.adapters import MarketplaceAdapter, list_adapters
-from analisador.core.enums import CanonicalField
+from analisador.core.enums import AdapterSupportTier, CanonicalField
 from analisador.core.schema import ALWAYS_REQUIRED_INPUT_FIELDS, CANONICAL_SCHEMA
-from analisador.ui.formatting import FIELD_LABELS
+from analisador.ui.formatting import FIELD_LABELS, SUPPORT_TIER_LABELS
 
 
 def _render_adapter_section(adapter: MarketplaceAdapter) -> None:
-    st.subheader(f"{adapter.display_name} — {adapter.report_type}")
+    tier_label = SUPPORT_TIER_LABELS[adapter.support_tier]
+    st.subheader(f"{adapter.display_name} — {adapter.report_type} ({tier_label})")
+    if adapter.support_tier is AdapterSupportTier.EXPERIMENTAL:
+        st.info(
+            "Suporte experimental: aguardando exportação real de pedidos da "
+            "Shopee Brasil para calibração final."
+        )
     st.caption(
         f"Referência observada em {adapter.observed_at}. {adapter.compatibility_note}"
     )

@@ -10,8 +10,7 @@ import pandas as pd
 import streamlit as st
 
 from analisador.analytics import ProductRankingMetric, TimeGranularity
-from analisador.core.enums import CanonicalField, OrderStatus
-from analisador.core.models import QualityReport
+from analisador.core.enums import CanonicalField, NetRevenueSource, OrderStatus
 from analisador.normalization import NormalizationResult
 from analisador.ui.components.charts import (
     build_abc_chart,
@@ -19,9 +18,11 @@ from analisador.ui.components.charts import (
     build_timeseries_chart,
     build_top_products_chart,
 )
-from analisador.ui.components.errors import render_ui_error
+from analisador.ui.components.errors import render_quality_summary, render_ui_error
+from analisador.ui.components.exports import render_export_section
 from analisador.ui.formatting import (
     GRANULARITY_LABELS,
+    NET_REVENUE_SOURCE_HELP,
     RANKING_METRIC_LABELS,
     STATUS_LABELS,
     format_brl,
@@ -45,25 +46,6 @@ class _DashboardFilters:
     product_query: str
     granularity: TimeGranularity
     ranking_metric: ProductRankingMetric
-
-
-def _render_quality_summary(quality: QualityReport) -> None:
-    valid_fmt = format_int_br(quality.valid_rows)
-    title = f"Relatório de qualidade dos dados — {valid_fmt} linhas válidas"
-    with st.expander(title, expanded=quality.has_issues):
-        cols = st.columns(5)
-        cols[0].metric("Linhas válidas", valid_fmt)
-        cols[1].metric("Linhas ignoradas", format_int_br(quality.ignored_rows))
-        cols[2].metric("Duplicidades", format_int_br(quality.duplicate_rows))
-        cols[3].metric("Datas inválidas", format_int_br(quality.invalid_dates))
-        cols[4].metric("Outliers (IQR)", format_int_br(quality.outlier_rows))
-        if quality.non_positive_quantities > 0 or quality.negative_values > 0:
-            st.caption(
-                f"Quantidades <= 0: {quality.non_positive_quantities} | "
-                f"Valores negativos: {quality.negative_values}."
-            )
-        for warning in quality.warnings:
-            st.warning(warning)
 
 
 def _unpack_date_selection(
@@ -177,7 +159,10 @@ def _render_primary_kpis(bundle: DashboardBundle) -> None:
     )
 
 
-def _render_secondary_kpis(bundle: DashboardBundle) -> None:
+def _render_secondary_kpis(
+    bundle: DashboardBundle,
+    net_source: NetRevenueSource,
+) -> None:
     kpis, cmp = bundle.kpis, bundle.comparison
     row2 = st.columns(3)
     row2[0].metric(
@@ -195,6 +180,7 @@ def _render_secondary_kpis(bundle: DashboardBundle) -> None:
         "Receita líquida",
         format_brl(kpis.net_revenue),
         delta=format_metric_delta(cmp.net_revenue, kind="brl") if cmp else None,
+        help=NET_REVENUE_SOURCE_HELP[net_source],
     )
 
 
@@ -254,19 +240,7 @@ def _render_charts_and_tables(
     _render_abc_section(bundle)
 
 
-def render_dashboard_section() -> None:
-    """Render quality summary, interactive filters, KPIs, charts, and tables."""
-    if not st.session_state.get(STATE_DASHBOARD_ENABLED, False):
-        return
-    result = st.session_state.get(STATE_NORMALIZED_RESULT)
-    if not isinstance(result, NormalizationResult):
-        return
-    st.divider()
-    st.subheader("4. Dashboard de vendas")
-    _render_quality_summary(result.quality_report)
-    if result.dataframe.empty:
-        st.warning("Nenhuma linha válida restou após a normalização.")
-        return
+def _render_filtered_dashboard(result: NormalizationResult) -> None:
     filters = _render_filters(result.dataframe)
     try:
         bundle = compute_dashboard_bundle_cached(
@@ -282,8 +256,27 @@ def render_dashboard_section() -> None:
         render_ui_error(translate_exception(exc))
         return
     _render_primary_kpis(bundle)
-    _render_secondary_kpis(bundle)
+    _render_secondary_kpis(bundle, result.net_revenue_source)
     _render_charts_and_tables(bundle, filters.ranking_metric)
+    render_export_section(
+        result, start_date=filters.start_date, end_date=filters.end_date
+    )
+
+
+def render_dashboard_section() -> None:
+    """Render quality summary, interactive filters, KPIs, charts, and tables."""
+    if not st.session_state.get(STATE_DASHBOARD_ENABLED, False):
+        return
+    result = st.session_state.get(STATE_NORMALIZED_RESULT)
+    if not isinstance(result, NormalizationResult):
+        return
+    st.divider()
+    st.subheader("4. Dashboard de vendas")
+    render_quality_summary(result.quality_report)
+    if result.dataframe.empty:
+        st.warning("Nenhuma linha válida restou após a normalização.")
+        return
+    _render_filtered_dashboard(result)
 
 
 __all__ = ["render_dashboard_section"]

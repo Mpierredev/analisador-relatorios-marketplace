@@ -12,8 +12,10 @@ from analisador.analytics import (
     TimeGranularity,
 )
 from analisador.core.enums import (
+    AdapterSupportTier,
     CanonicalField,
     Marketplace,
+    NetRevenueSource,
     OrderStatus,
     ValidationStatus,
 )
@@ -60,11 +62,36 @@ RANKING_METRIC_LABELS: Final[dict[ProductRankingMetric, str]] = {
     ProductRankingMetric.QUANTITY: "Quantidade vendida",
 }
 
+SUPPORT_TIER_LABELS: Final[dict[AdapterSupportTier, str]] = {
+    AdapterSupportTier.VERIFIED: "Verificado",
+    AdapterSupportTier.EXPERIMENTAL: "Experimental",
+}
+
+NET_REVENUE_SOURCE_HELP: Final[dict[NetRevenueSource, str]] = {
+    NetRevenueSource.REPORTED: (
+        "Valor informado diretamente pela coluna líquida/total da planilha "
+        "(pode incluir regras próprias de frete e subsídios da plataforma)."
+    ),
+    NetRevenueSource.DERIVED: (
+        "Valor calculado a partir de receita bruta menos taxas e envio informados."
+    ),
+    NetRevenueSource.MIXED: (
+        "Combina valores informados na planilha e valores calculados quando ausentes."
+    ),
+    NetRevenueSource.UNAVAILABLE: (
+        "Sem coluna de taxas ou valor líquido mapeada nesta planilha."
+    ),
+}
+
 
 def build_format_options() -> list[tuple[str, str]]:
     """Return UI format selector pairs (format_key, display_label)."""
     options: list[tuple[str, str]] = [
-        (adapter.key, f"{adapter.display_name} — {adapter.report_type}")
+        (
+            adapter.key,
+            f"{adapter.display_name} — {adapter.report_type} "
+            f"({SUPPORT_TIER_LABELS[adapter.support_tier]})",
+        )
         for adapter in list_adapters()
     ]
     options.append(
@@ -136,8 +163,10 @@ def format_metric_delta(
 __all__ = [
     "FIELD_LABELS",
     "GRANULARITY_LABELS",
+    "NET_REVENUE_SOURCE_HELP",
     "RANKING_METRIC_LABELS",
     "STATUS_LABELS",
+    "SUPPORT_TIER_LABELS",
     "UNAVAILABLE_LABEL",
     "VALIDATION_STATUS_LABELS",
     "build_format_options",
