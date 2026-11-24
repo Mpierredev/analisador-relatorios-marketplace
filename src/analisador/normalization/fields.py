@@ -80,6 +80,8 @@ class MonetaryFieldsResult:
     null_counts: dict[str, int]
     malformed_counts: dict[str, int]
     negative_value_rows: int
+    reported_net_mask: pd.Series[Any]
+    derived_net_mask: pd.Series[Any]
 
 
 def _clean_string_series(
@@ -263,7 +265,7 @@ def normalize_monetary_fields(
     unit_price = parsed[CanonicalField.UNIT_PRICE]
     has_net = CanonicalField.NET_REVENUE in mapped_columns
     gross_rev, net_rev = _derive_gross_and_net(parsed, quantity, fees, ship, has_net)
-    neg_rows = _count_negative_monetary_rows(unit_price, gross_rev, net_rev)
+    reported_net = parsed[CanonicalField.NET_REVENUE].notna()
     return MonetaryFieldsResult(
         unit_price,
         gross_rev,
@@ -272,7 +274,9 @@ def normalize_monetary_fields(
         net_rev,
         null_counts,
         malformed_counts,
-        neg_rows,
+        _count_negative_monetary_rows(unit_price, gross_rev, net_rev),
+        reported_net,
+        net_rev.notna() & (~reported_net),
     )
 
 

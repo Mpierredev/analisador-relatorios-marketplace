@@ -12,7 +12,7 @@ import pandas as pd
 from analisador.adapters.base import MarketplaceAdapter
 from analisador.adapters.registry import get_adapter, has_adapter
 from analisador.core.config import DEFAULT_TIMEZONE
-from analisador.core.enums import CanonicalField, DecimalStyle
+from analisador.core.enums import CanonicalField, DecimalStyle, NetRevenueSource
 from analisador.core.errors import MissingRequiredColumnsError, NormalizationError
 from analisador.core.models import QualityReport, ValidationReport
 from analisador.core.schema import CANONICAL_COLUMNS
@@ -44,6 +44,7 @@ class NormalizationResult:
     dataframe: pd.DataFrame
     quality_report: QualityReport
     date_parse_result: DateParseResult
+    net_revenue_source: NetRevenueSource = NetRevenueSource.UNAVAILABLE
 
 
 @dataclass(frozen=True, slots=True)
@@ -250,6 +251,19 @@ def _build_diagnostics(
     return build_quality_report(diagnostics)
 
 
+def _resolve_net_revenue_source(
+    monetary: MonetaryFieldsResult,
+    valid_mask: pd.Series[Any],
+) -> NetRevenueSource:
+    has_reported = bool((monetary.reported_net_mask & valid_mask).any())
+    has_derived = bool((monetary.derived_net_mask & valid_mask).any())
+    if has_reported and has_derived:
+        return NetRevenueSource.MIXED
+    if has_reported:
+        return NetRevenueSource.REPORTED
+    return NetRevenueSource.DERIVED if has_derived else NetRevenueSource.UNAVAILABLE
+
+
 def normalize_report(
     raw_df: pd.DataFrame,
     validation_report: ValidationReport,
@@ -270,13 +284,11 @@ def normalize_report(
     canonical_df = _assemble_canonical_dataframe(
         normalized, validation_report.selected_adapter, valid_mask
     )
-    quality_report = _build_diagnostics(
-        len(raw_df), canonical_df, projected, normalized
+    quality = _build_diagnostics(len(raw_df), canonical_df, projected, normalized)
+    net_source = _resolve_net_revenue_source(normalized.monetary, valid_mask)
+    return NormalizationResult(
+        canonical_df, quality, normalized.date_result, net_source
     )
-    return NormalizationResult(canonical_df, quality_report, normalized.date_result)
 
 
-__all__ = [
-    "NormalizationResult",
-    "normalize_report",
-]
+__all__ = ["NormalizationResult", "normalize_report"]

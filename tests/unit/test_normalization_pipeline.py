@@ -7,7 +7,12 @@ import pandas as pd
 import pytest
 
 import analisador.normalization as normalization
-from analisador.core.enums import CanonicalField, Marketplace, OrderStatus
+from analisador.core.enums import (
+    CanonicalField,
+    Marketplace,
+    NetRevenueSource,
+    OrderStatus,
+)
 from analisador.core.errors import MissingRequiredColumnsError, NormalizationError
 from analisador.core.models import QualityReport, ValidationReport
 from analisador.core.schema import CANONICAL_COLUMNS
@@ -325,3 +330,59 @@ def test_quality_iqr_outliers_handles_small_or_constant_samples() -> None:
     assert normalization.count_iqr_outliers(pd.Series([100, 200, 300])) == 0
     assert normalization.count_iqr_outliers(pd.Series([100, 100, 100, 100])) == 0
     assert normalization.count_iqr_outliers(pd.Series([100, 105, 110, 115, 5_000])) == 1
+
+
+def test_normalize_report_tracks_net_revenue_source() -> None:
+    df_mixed = pd.DataFrame(
+        {
+            "data": ["2025-01-01", "2025-01-02"],
+            "prod": ["Item A", "Item B"],
+            "qtd": ["1", "1"],
+            "bruto": ["100,00", "200,00"],
+            "taxas": ["10,00", "20,00"],
+            "liquido": ["85,00", ""],
+        }
+    )
+    mapping_full: dict[CanonicalField, str] = {
+        CanonicalField.ORDER_DATE: "data",
+        CanonicalField.PRODUCT_NAME: "prod",
+        CanonicalField.QUANTITY: "qtd",
+        CanonicalField.GROSS_REVENUE: "bruto",
+        CanonicalField.FEES: "taxas",
+        CanonicalField.NET_REVENUE: "liquido",
+    }
+    mixed_res = normalize_report(
+        df_mixed,
+        validate_report(df_mixed, Marketplace.GENERIC, manual_mapping=mapping_full),
+    )
+    assert mixed_res.net_revenue_source is NetRevenueSource.MIXED
+
+    reported_df = df_mixed.iloc[[0]]
+    reported_res = normalize_report(
+        reported_df,
+        validate_report(reported_df, Marketplace.GENERIC, manual_mapping=mapping_full),
+    )
+    assert reported_res.net_revenue_source is NetRevenueSource.REPORTED
+
+    derived_df = df_mixed.drop(columns=["liquido"])
+    derived_map: dict[CanonicalField, str] = {
+        k: v for k, v in mapping_full.items() if k != CanonicalField.NET_REVENUE
+    }
+    derived_res = normalize_report(
+        derived_df,
+        validate_report(derived_df, Marketplace.GENERIC, manual_mapping=derived_map),
+    )
+    assert derived_res.net_revenue_source is NetRevenueSource.DERIVED
+
+    unavail_df = df_mixed[["data", "prod", "qtd", "bruto"]]
+    unavail_map: dict[CanonicalField, str] = {
+        CanonicalField.ORDER_DATE: "data",
+        CanonicalField.PRODUCT_NAME: "prod",
+        CanonicalField.QUANTITY: "qtd",
+        CanonicalField.GROSS_REVENUE: "bruto",
+    }
+    unavail_res = normalize_report(
+        unavail_df,
+        validate_report(unavail_df, Marketplace.GENERIC, manual_mapping=unavail_map),
+    )
+    assert unavail_res.net_revenue_source is NetRevenueSource.UNAVAILABLE
