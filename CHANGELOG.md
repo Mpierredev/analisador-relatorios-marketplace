@@ -9,6 +9,8 @@ e este projeto adota o [Versionamento Semântico](https://semver.org/lang/pt-BR/
 
 ### Adicionado
 
+- Biblioteca de análises independente da interface em `src/analisador/analytics/` com KPIs gerais e por período, distribuição de status, séries temporais diária/semanal/mensal, ranking de produtos, Curva ABC e comparação com período anterior equivalente (`filters.py`, `kpis.py`, `timeseries.py`, `products.py`, `comparison.py`).
+- Constante `DEFAULT_TOP_PRODUCTS_LIMIT` em `src/analisador/core/config.py`.
 - Parsers vetorizados de moeda brasileira e internacional em centavos (`src/analisador/normalization/currency.py` e `src/analisador/normalization/currency_series.py`), incluindo negativos entre parênteses.
 - Parser vetorizado de datas em formatos brasileiros, ISO e datas por extenso em português/espanhol (`src/analisador/normalization/dates.py`), com `dayfirst` explícito e conversão para `America/Sao_Paulo`.
 - Normalização de campos, derivação de receita bruta e líquida e relatório de qualidade (`src/analisador/normalization/fields.py`, `src/analisador/normalization/quality.py` e `src/analisador/normalization/pipeline.py`).
