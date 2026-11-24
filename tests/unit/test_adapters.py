@@ -12,7 +12,12 @@ from analisador.adapters import (
     normalize_header,
     normalize_status,
 )
-from analisador.core.enums import CanonicalField, Marketplace, OrderStatus
+from analisador.core.enums import (
+    AdapterSupportTier,
+    CanonicalField,
+    Marketplace,
+    OrderStatus,
+)
 
 
 def test_adapters_package_reexports_match_all() -> None:
@@ -139,3 +144,8 @@ def test_marketplace_adapter_rejects_invalid_definitions(
     defaults.update(overrides)
     with pytest.raises(ValueError, match=match_pattern):
         MarketplaceAdapter(**defaults)  # type: ignore[arg-type]
+
+
+def test_builtin_adapter_support_tiers() -> None:
+    assert MERCADO_LIVRE_ADAPTER.support_tier is AdapterSupportTier.VERIFIED
+    assert SHOPEE_ADAPTER.support_tier is AdapterSupportTier.EXPERIMENTAL

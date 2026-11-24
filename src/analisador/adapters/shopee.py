@@ -5,6 +5,7 @@ from typing import Final
 from analisador.adapters.base import MarketplaceAdapter
 from analisador.core.config import MEDIUM_CONFIDENCE_THRESHOLD
 from analisador.core.enums import (
+    AdapterSupportTier,
     CanonicalField,
     DecimalStyle,
     Marketplace,
@@ -157,6 +158,7 @@ SHOPEE_ADAPTER: Final[MarketplaceAdapter] = MarketplaceAdapter(
     ),
     decimal_style=DecimalStyle.AUTO,
     min_score=MEDIUM_CONFIDENCE_THRESHOLD,
+    support_tier=AdapterSupportTier.EXPERIMENTAL,
 )
 
 __all__ = ["SHOPEE_ADAPTER"]

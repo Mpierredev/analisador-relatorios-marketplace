@@ -72,12 +72,30 @@ class DecimalStyle(StrEnum):
     AUTO = "auto"
 
 
+class AdapterSupportTier(StrEnum):
+    """Calibration maturity level of a marketplace adapter."""
+
+    VERIFIED = "verificado"
+    EXPERIMENTAL = "experimental"
+
+
+class NetRevenueSource(StrEnum):
+    """Origin of the normalized net_revenue column."""
+
+    REPORTED = "informada"
+    DERIVED = "derivada"
+    MIXED = "mista"
+    UNAVAILABLE = "indisponivel"
+
+
 __all__ = [
+    "AdapterSupportTier",
     "CanonicalField",
     "DecimalStyle",
     "FieldDataType",
     "FieldRequirement",
     "Marketplace",
+    "NetRevenueSource",
     "OrderStatus",
     "ValidationStatus",
 ]

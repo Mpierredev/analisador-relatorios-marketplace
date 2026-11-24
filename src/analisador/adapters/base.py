@@ -14,7 +14,12 @@ from analisador.core.config import (
     MEDIUM_CONFIDENCE_THRESHOLD,
     MIN_DETECTION_SCORE,
 )
-from analisador.core.enums import CanonicalField, DecimalStyle, OrderStatus
+from analisador.core.enums import (
+    AdapterSupportTier,
+    CanonicalField,
+    DecimalStyle,
+    OrderStatus,
+)
 
 _NON_ALNUM_PATTERN: Final[re.Pattern[str]] = re.compile(r"[^a-z0-9]+")
 
@@ -107,6 +112,7 @@ class MarketplaceAdapter:
     date_formats: tuple[str, ...] = ()
     decimal_style: DecimalStyle = DecimalStyle.AUTO
     min_score: float = MEDIUM_CONFIDENCE_THRESHOLD
+    support_tier: AdapterSupportTier = AdapterSupportTier.EXPERIMENTAL
 
     def __post_init__(self) -> None:
         _require_text("key", self.key)

@@ -6,6 +6,7 @@ Antes da comparação com cada adapter, todos os cabeçalhos passam por normaliz
 
 ## Shopee (`shopee`)
 
+- **Nível de suporte:** Experimental (aguardando exportação real de `Meus Pedidos` da Shopee BR para calibração final)
 - **Tipo de relatório:** Relatório de pedidos
 - **Data da observação:** `2026-11-22`
 - **Compatibilidade:** Exportações da Central do Vendedor em português, inglês e espanhol.
@@ -34,6 +35,7 @@ Antes da comparação com cada adapter, todos os cabeçalhos passam por normaliz
 
 ## Mercado Livre (`mercado_livre`)
 
+- **Nível de suporte:** Verificado (calibrado com exportações reais em português e espanhol)
 - **Tipo de relatório:** Relatório de vendas
 - **Data da observação:** `2026-11-23`
 - **Compatibilidade:** Exportações de vendas do Mercado Livre e Mercado Libre em português, espanhol e inglês.

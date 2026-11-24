@@ -34,11 +34,13 @@ from analisador.core.config import (
     UTF8_BOM_ENCODING,
 )
 from analisador.core.enums import (
+    AdapterSupportTier,
     CanonicalField,
     DecimalStyle,
     FieldDataType,
     FieldRequirement,
     Marketplace,
+    NetRevenueSource,
     OrderStatus,
     ValidationStatus,
 )
@@ -108,6 +110,7 @@ __all__ = [
     "TYPE_INFERENCE_SAMPLE_ROWS",
     "UTF8_BOM_ENCODING",
     "AdapterScore",
+    "AdapterSupportTier",
     "CanonicalField",
     "CanonicalRecord",
     "DecimalStyle",
@@ -119,6 +122,7 @@ __all__ = [
     "KpiSummary",
     "Marketplace",
     "MissingRequiredColumnsError",
+    "NetRevenueSource",
     "NormalizationError",
     "OrderStatus",
     "QualityReport",
