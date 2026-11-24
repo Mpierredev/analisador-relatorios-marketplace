@@ -9,6 +9,7 @@ from analisador.core.config import (
     CENTS_PER_UNIT,
     CONFLICT_FIELD_PENALTY,
     DEFAULT_TIMEZONE,
+    DEFAULT_TOP_PRODUCTS_LIMIT,
     ENCODING_SAMPLE_BYTES,
     FALLBACK_ENCODINGS,
     GENERIC_NAME_SIMILARITY_THRESHOLD,
@@ -86,6 +87,7 @@ def test_analytics_and_ui_constants() -> None:
     assert IQR_UPPER_QUANTILE == 0.75
     assert IQR_OUTLIER_MULTIPLIER == 1.5
     assert Decimal("0") < ABC_CLASS_A_LIMIT < ABC_CLASS_B_LIMIT < Decimal("1")
+    assert DEFAULT_TOP_PRODUCTS_LIMIT == 10
     assert PREVIEW_ROW_COUNT > 0
     assert CACHE_MAX_ENTRIES > 0
     assert CACHE_TTL_SECONDS > 0
