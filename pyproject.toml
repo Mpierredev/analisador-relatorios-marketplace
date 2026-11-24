@@ -73,6 +73,7 @@ module = [
   "analisador.validation.*",
   "analisador.normalization.*",
   "analisador.analytics.*",
+  "analisador.export.*",
 ]
 disallow_any_generics = true
 disallow_subclassing_any = true
@@ -95,7 +96,7 @@ addopts = "-ra --strict-markers --strict-config"
 [tool.coverage.run]
 source = ["src/analisador"]
 branch = true
-omit = ["src/analisador/ui/*", "src/analisador/export/*"]
+omit = ["src/analisador/ui/*"]
 
 [tool.coverage.report]
 show_missing = true
