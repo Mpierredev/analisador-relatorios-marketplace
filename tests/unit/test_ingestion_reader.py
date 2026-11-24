@@ -4,6 +4,7 @@ import logging
 from collections.abc import Sequence
 from datetime import date, datetime
 from types import SimpleNamespace
+from typing import Any
 
 import openpyxl
 import pandas as pd
@@ -16,8 +17,12 @@ from analisador.core.errors import (
     HeaderNotFoundError,
     UnsupportedFileError,
 )
-from analisador.ingestion import reader as reader_module
-from analisador.ingestion.reader import read_report, read_report_with_metadata
+from analisador.ingestion import xlsx as xlsx_module
+from analisador.ingestion.reader import (
+    list_xlsx_sheets,
+    read_report,
+    read_report_with_metadata,
+)
 
 
 def _build_xlsx_bytes(
@@ -171,7 +176,7 @@ def test_read_report_rejects_unsupported_empty_and_corrupted_files(
 
     fake_workbook = SimpleNamespace(worksheets=[], close=lambda: None)
     monkeypatch.setattr(
-        reader_module,
+        xlsx_module,
         "load_workbook",
         lambda *_args, **_kwargs: fake_workbook,
     )
@@ -239,7 +244,7 @@ def test_read_report_enforces_size_and_row_limits() -> None:
     ],
 )
 def test_read_report_rejects_invalid_limit_arguments(
-    kwargs: dict[str, int],
+    kwargs: dict[str, Any],
     match_pattern: str,
 ) -> None:
     with pytest.raises(ValueError, match=match_pattern):
@@ -263,3 +268,37 @@ def test_read_report_never_logs_file_contents_or_filename(
     assert "Cliente Secreto" not in combined_logs
     assert "Produto Confidencial" not in combined_logs
     assert "relatorio_confidencial_loja.csv" not in combined_logs
+
+
+def test_list_and_select_xlsx_sheets() -> None:
+    workbook = openpyxl.Workbook()
+    first = workbook.active
+    assert first is not None
+    first.title = "Resumo"
+    first.append(["Campo", "Valor"])
+    first.append(["Loja", "Exemplo"])
+    second = workbook.create_sheet("Vendas")
+    second.append(["Data", "Produto", "Quantidade", "Valor"])
+    second.append(["01/03/2025", "Cadeira", "2", "400,00"])
+    buf = io.BytesIO()
+    workbook.save(buf)
+    workbook.close()
+    xlsx_bytes = buf.getvalue()
+
+    assert list_xlsx_sheets(xlsx_bytes) == ("Resumo", "Vendas")
+    selected = read_report_with_metadata(
+        xlsx_bytes,
+        "multi.xlsx",
+        sheet_name="Vendas",
+    )
+    assert selected.sheet_name == "Vendas"
+    assert list(selected.dataframe.columns) == [
+        "Data",
+        "Produto",
+        "Quantidade",
+        "Valor",
+    ]
+    assert selected.dataframe.iloc[0]["Produto"] == "Cadeira"
+
+    with pytest.raises(UnsupportedFileError, match="não encontrada"):
+        read_report(xlsx_bytes, "multi.xlsx", sheet_name="Inexistente")

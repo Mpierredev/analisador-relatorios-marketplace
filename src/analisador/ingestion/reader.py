@@ -1,19 +1,14 @@
 """In-memory CSV and XLSX ingestion into raw pandas DataFrames."""
 
+from __future__ import annotations
+
 import csv
 import io
-import itertools
 import logging
-from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from datetime import date
 from pathlib import Path
-from typing import Final
-from zipfile import BadZipFile
 
 import pandas as pd
-from openpyxl import Workbook, load_workbook
-from openpyxl.utils.exceptions import InvalidFileException
 
 from analisador.core.config import (
     BYTES_PER_MEGABYTE,
@@ -29,16 +24,9 @@ from analisador.core.errors import (
 )
 from analisador.ingestion.encoding import decode_text
 from analisador.ingestion.structure import detect_header_row, detect_separator
+from analisador.ingestion.xlsx import list_xlsx_sheet_names, read_xlsx_sheet
 
 logger = logging.getLogger(__name__)
-
-_XLSX_READ_ERRORS: Final[tuple[type[Exception], ...]] = (
-    InvalidFileException,
-    BadZipFile,
-    KeyError,
-    OSError,
-    ValueError,
-)
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,90 +146,34 @@ def _read_csv(content: bytes, max_rows: int) -> IngestionResult:
     )
 
 
-def _stringify_cell(value: object) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, date):
-        return value.isoformat()
-    return str(value)
-
-
-def _stringify_row(row: Sequence[object]) -> list[str]:
-    return [_stringify_cell(cell) for cell in row]
-
-
-def _normalize_headers(raw_header: Sequence[str]) -> list[str]:
-    trimmed = list(raw_header)
-    while trimmed and not trimmed[-1].strip():
-        trimmed.pop()
-
-    counts: dict[str, int] = {}
-    headers: list[str] = []
-    for idx, cell in enumerate(trimmed):
-        base = cell.strip() or f"coluna_{idx + 1}"
-        seen = counts.get(base, 0)
-        counts[base] = seen + 1
-        headers.append(base if seen == 0 else f"{base}.{seen}")
-    return headers
-
-
-def _collect_xlsx_rows(
-    remaining_rows: Iterable[list[str]],
-    column_count: int,
+def _read_xlsx(
+    content: bytes,
     max_rows: int,
-) -> list[list[str]]:
-    data_rows: list[list[str]] = []
-    for row in remaining_rows:
-        if not any(cell.strip() for cell in row):
-            continue
-        if len(data_rows) >= max_rows:
-            raise _format_row_limit_error(max_rows)
-        if len(row) < column_count:
-            aligned = [*row, *([""] * (column_count - len(row)))]
-        else:
-            aligned = row[:column_count]
-        data_rows.append(aligned)
-    return data_rows
-
-
-def _open_xlsx_workbook(content: bytes) -> Workbook:
-    try:
-        return load_workbook(io.BytesIO(content), read_only=True, data_only=True)
-    except _XLSX_READ_ERRORS as exc:
-        raise UnsupportedFileError(
-            "Não foi possível abrir o arquivo .xlsx.",
-            suggestion="Confirme se a planilha está íntegra e sem proteção por senha.",
-        ) from exc
-
-
-def _read_xlsx(content: bytes, max_rows: int) -> IngestionResult:
-    workbook = _open_xlsx_workbook(content)
-    try:
-        if not workbook.worksheets:
-            raise HeaderNotFoundError()
-        sheet = workbook.worksheets[0]
-        rows_iter = sheet.iter_rows(values_only=True)
-        sample_rows = [
-            _stringify_row(raw)
-            for raw in itertools.islice(rows_iter, HEADER_SCAN_MAX_ROWS)
-        ]
-        header_row_index = detect_header_row(sample_rows)
-        headers = _normalize_headers(sample_rows[header_row_index])
-        remaining = itertools.chain(
-            sample_rows[header_row_index + 1 :],
-            (_stringify_row(raw) for raw in rows_iter),
-        )
-        data_rows = _collect_xlsx_rows(remaining, len(headers), max_rows)
-        sheet_name = str(sheet.title)
-    finally:
-        workbook.close()
-
-    return IngestionResult(
-        dataframe=pd.DataFrame(data_rows, columns=headers),
-        extension=".xlsx",
-        header_row_index=header_row_index,
+    *,
+    sheet_name: str | None = None,
+) -> IngestionResult:
+    dataframe, header_row_index, resolved_title = read_xlsx_sheet(
+        content,
+        max_rows,
+        _format_row_limit_error,
         sheet_name=sheet_name,
     )
+    return IngestionResult(
+        dataframe=dataframe,
+        extension=".xlsx",
+        header_row_index=header_row_index,
+        sheet_name=resolved_title,
+    )
+
+
+def list_xlsx_sheets(
+    content: bytes,
+    *,
+    max_file_size_bytes: int = MAX_FILE_SIZE_BYTES,
+) -> tuple[str, ...]:
+    """List available worksheet names in an XLSX file within size limits."""
+    _validate_inputs(content, "planilha.xlsx", max_file_size_bytes, MAX_ROWS)
+    return list_xlsx_sheet_names(content)
 
 
 def read_report_with_metadata(
@@ -250,13 +182,14 @@ def read_report_with_metadata(
     *,
     max_file_size_bytes: int = MAX_FILE_SIZE_BYTES,
     max_rows: int = MAX_ROWS,
+    sheet_name: str | None = None,
 ) -> IngestionResult:
     """Read raw CSV or XLSX bytes into a string DataFrame with metadata."""
     extension = _validate_inputs(content, filename, max_file_size_bytes, max_rows)
     result = (
         _read_csv(content, max_rows)
         if extension == ".csv"
-        else _read_xlsx(content, max_rows)
+        else _read_xlsx(content, max_rows, sheet_name=sheet_name)
     )
     logger.info(
         "Relatório lido em memória: extensao=%s bytes=%d linhas=%d colunas=%d "
@@ -276,6 +209,7 @@ def read_report(
     *,
     max_file_size_bytes: int = MAX_FILE_SIZE_BYTES,
     max_rows: int = MAX_ROWS,
+    sheet_name: str | None = None,
 ) -> pd.DataFrame:
     """Read raw CSV or XLSX bytes and return a raw string DataFrame."""
     return read_report_with_metadata(
@@ -283,11 +217,13 @@ def read_report(
         filename,
         max_file_size_bytes=max_file_size_bytes,
         max_rows=max_rows,
+        sheet_name=sheet_name,
     ).dataframe
 
 
 __all__ = [
     "IngestionResult",
+    "list_xlsx_sheets",
     "read_report",
     "read_report_with_metadata",
 ]
