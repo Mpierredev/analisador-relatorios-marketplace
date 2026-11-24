@@ -6,6 +6,7 @@ from analisador.core.config import (
     BYTES_PER_MEGABYTE,
     CACHE_MAX_ENTRIES,
     CACHE_TTL_SECONDS,
+    CENTS_PER_UNIT,
     CONFLICT_FIELD_PENALTY,
     DEFAULT_TIMEZONE,
     ENCODING_SAMPLE_BYTES,
@@ -14,15 +15,19 @@ from analisador.core.config import (
     HEADER_SCAN_MAX_ROWS,
     HEADER_SIMILARITY_THRESHOLD,
     HIGH_CONFIDENCE_THRESHOLD,
+    IQR_LOWER_QUANTILE,
     IQR_OUTLIER_MULTIPLIER,
+    IQR_UPPER_QUANTILE,
     MAX_DETECTION_SCORE,
     MAX_FILE_SIZE_BYTES,
     MAX_FILE_SIZE_MB,
+    MAX_MONETARY_INTEGER_DIGITS,
     MAX_RATIO,
     MAX_ROWS,
     MEDIUM_CONFIDENCE_THRESHOLD,
     MIN_DETECTION_SCORE,
     MIN_HEADER_COLUMNS,
+    MIN_OUTLIER_SAMPLE_SIZE,
     MIN_QUANTITY,
     MIN_RATIO,
     OPTIONAL_FIELD_WEIGHT,
@@ -30,6 +35,7 @@ from analisador.core.config import (
     REQUIRED_FIELD_WEIGHT,
     SUPPORTED_EXTENSIONS,
     SUPPORTED_SEPARATORS,
+    SYNTHETIC_ORDER_ID_PREFIX,
     TYPE_INFERENCE_SAMPLE_ROWS,
     UTF8_BOM_ENCODING,
 )
@@ -47,6 +53,9 @@ def test_operational_limits_and_extensions() -> None:
     assert UTF8_BOM_ENCODING == "utf-8-sig"
     assert list(FALLBACK_ENCODINGS) == ["utf-8", "cp1252", "latin-1"]
     assert DEFAULT_TIMEZONE == "America/Sao_Paulo"
+    assert CENTS_PER_UNIT == 100
+    assert MAX_MONETARY_INTEGER_DIGITS == 15
+    assert SYNTHETIC_ORDER_ID_PREFIX == "SYN-"
     assert MIN_QUANTITY == 1
 
 
@@ -71,6 +80,10 @@ def test_detection_weights_and_thresholds_are_consistent() -> None:
 
 
 def test_analytics_and_ui_constants() -> None:
+    assert MIN_OUTLIER_SAMPLE_SIZE == 4
+    assert 0.0 < IQR_LOWER_QUANTILE < IQR_UPPER_QUANTILE < 1.0
+    assert IQR_LOWER_QUANTILE == 0.25
+    assert IQR_UPPER_QUANTILE == 0.75
     assert IQR_OUTLIER_MULTIPLIER == 1.5
     assert Decimal("0") < ABC_CLASS_A_LIMIT < ABC_CLASS_B_LIMIT < Decimal("1")
     assert PREVIEW_ROW_COUNT > 0
