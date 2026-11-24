@@ -9,6 +9,7 @@ e este projeto adota o [Versionamento Semântico](https://semver.org/lang/pt-BR/
 
 ### Adicionado
 
+- Interface multipágina em Streamlit (`app.py`, `.streamlit/config.toml` e `src/analisador/ui/`) com páginas `Analisar`, `Formatos suportados`, `Como exportar` e `Sobre`, fluxo bloqueado por validação, mapeamento manual para planilhas genéricas, cache limitado por tempo e entradas, cartões de KPI, filtros interativos e gráficos Altair.
 - Biblioteca de análises independente da interface em `src/analisador/analytics/` com KPIs gerais e por período, distribuição de status, séries temporais diária/semanal/mensal, ranking de produtos, Curva ABC e comparação com período anterior equivalente (`filters.py`, `kpis.py`, `timeseries.py`, `products.py`, `comparison.py`).
 - Constante `DEFAULT_TOP_PRODUCTS_LIMIT` em `src/analisador/core/config.py`.
 - Parsers vetorizados de moeda brasileira e internacional em centavos (`src/analisador/normalization/currency.py` e `src/analisador/normalization/currency_series.py`), incluindo negativos entre parênteses.
