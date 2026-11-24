@@ -9,6 +9,9 @@ e este projeto adota o [Versionamento Semântico](https://semver.org/lang/pt-BR/
 
 ### Adicionado
 
+- Camada de exportação em memória (`src/analisador/export/`) para geração de CSV canônico e workbook Excel gerencial de cinco abas (`Resumo KPIs`, `Série Temporal`, `Top Produtos`, `Curva ABC` e `Status e Qualidade`), com botões de download no dashboard.
+- Amostras sintéticas em `samples/` (`scripts/gerar_amostras.py`) disponíveis para carregamento em um clique na aba `Analisar` e download na página `Como exportar`.
+- Classificação declarativa de maturidade de adapters (`AdapterSupportTier`: `verificado` e `experimental`), identificação da origem da receita líquida (`NetRevenueSource`) e seleção explícita de abas em planilhas `.xlsx` multi-aba (`list_xlsx_sheets` e parâmetro `sheet_name`).
 - Interface multipágina em Streamlit (`app.py`, `.streamlit/config.toml` e `src/analisador/ui/`) com páginas `Analisar`, `Formatos suportados`, `Como exportar` e `Sobre`, fluxo bloqueado por validação, mapeamento manual para planilhas genéricas, cache limitado por tempo e entradas, cartões de KPI, filtros interativos e gráficos Altair.
 - Biblioteca de análises independente da interface em `src/analisador/analytics/` com KPIs gerais e por período, distribuição de status, séries temporais diária/semanal/mensal, ranking de produtos, Curva ABC e comparação com período anterior equivalente (`filters.py`, `kpis.py`, `timeseries.py`, `products.py`, `comparison.py`).
 - Constante `DEFAULT_TOP_PRODUCTS_LIMIT` em `src/analisador/core/config.py`.
