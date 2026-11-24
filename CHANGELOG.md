@@ -9,6 +9,10 @@ e este projeto adota o [Versionamento Semântico](https://semver.org/lang/pt-BR/
 
 ### Adicionado
 
+- Parsers vetorizados de moeda brasileira e internacional em centavos (`src/analisador/normalization/currency.py` e `src/analisador/normalization/currency_series.py`), incluindo negativos entre parênteses.
+- Parser vetorizado de datas em formatos brasileiros, ISO e datas por extenso em português/espanhol (`src/analisador/normalization/dates.py`), com `dayfirst` explícito e conversão para `America/Sao_Paulo`.
+- Normalização de campos, derivação de receita bruta e líquida e relatório de qualidade (`src/analisador/normalization/fields.py`, `src/analisador/normalization/quality.py` e `src/analisador/normalization/pipeline.py`).
+- Constantes de normalização e IQR em `src/analisador/core/config.py` e suíte de testes unitários e baseados em propriedades (`hypothesis`) em `tests/unit/test_normalization_*.py`.
 - Inferência de tipos de coluna e sugestão automática de mapeamento genérico em `src/analisador/validation/types.py` e `src/analisador/validation/suggestions.py`.
 - Validação estrutural para adapters e mapeamento manual em `src/analisador/validation/validator.py` e `src/analisador/validation/generic.py`, gerando `ValidationReport` com bloqueio explícito via `ensure_can_generate_dashboard`.
 - Alias observado `Preço unitário de venda do anúncio (BRL)` no adapter do Mercado Livre (`docs/formatos-suportados.md`).
