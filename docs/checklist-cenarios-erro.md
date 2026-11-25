@@ -19,7 +19,7 @@ Este documento registra os **5 cenários obrigatórios de tratamento de erros** 
 - **Resultado verificado**: Aprovado em teste de integração automatizado (`AppTest`).
 
 ## Cenário 3 — Arquivo acima do limite operacional (`FileTooLargeError`)
-- **Como reproduzir**: Enviar arquivo com tamanho superior a `50 MB` (`MAX_FILE_SIZE_MB`) ou planilha tabular com mais de `200.000` linhas (`MAX_ROWS`).
+- **Como reproduzir**: Enviar arquivo com tamanho superior a `25 MB` (`MAX_FILE_SIZE_MB`) ou planilha tabular com mais de `200.000` linhas (`MAX_ROWS`).
 - **Comportamento esperado**:
   - A ingestão interrompe a carga imediatamente ao detectar excesso de bytes ou excesso de linhas.
   - A interface exibe mensagem informando o limite operacional e orientando a dividir o período exportado em lotes menores.
