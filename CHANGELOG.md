@@ -9,6 +9,7 @@ e este projeto adota o [Versionamento Semântico](https://semver.org/lang/pt-BR/
 
 ### Adicionado
 
+- Publicação no Streamlit Community Cloud (`https://dashboardmaker.streamlit.app/`) e link direto da demonstração ao vivo no `README.md`.
 - Arquivos `requirements.txt` (dependências com versões fixadas e instalação local `-e .`) e `runtime.txt` (`python-3.12`) para deploy no Streamlit Community Cloud.
 
 ### Alterado

@@ -3,6 +3,7 @@
 ![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)
 ![Licença MIT](https://img.shields.io/badge/Licen%C3%A7a-MIT-green)
 [![CI](https://github.com/Mpierredev/analisador-relatorios-marketplace/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Mpierredev/analisador-relatorios-marketplace/actions/workflows/ci.yml)
+[![Demo ao vivo](https://img.shields.io/badge/Demo-Streamlit%20Cloud-FF4B4B?logo=streamlit&logoColor=white)](https://dashboardmaker.streamlit.app/)
 
 Aplicação web gratuita em Streamlit para validar, normalizar, diagnosticar e analisar relatórios de vendas exportados de marketplaces (Mercado Livre, Shopee e planilhas CSV/XLSX genéricas), transformando exportações brutas e heterogêneas em um dashboard interativo com exportação padronizada — **sem banco de dados, sem cadastro e com processamento integralmente em memória**.
 
@@ -24,8 +25,8 @@ Selecionar formato -> Enviar arquivo (.csv/.xlsx) -> Validar / mapear -> Gerar d
 
 ## Demo ao vivo e amostras prontas
 
-- **Deploy público (Streamlit Community Cloud):** em preparação para a etapa de publicação (`Etapa 11`). Assim que publicado, a URL ficará disponível neste espaço.
-- **Execução instantânea com amostras incluídas:** após iniciar a aplicação localmente com `streamlit run app.py`, a página **Analisar** oferece botões de carregamento em **1 clique** para três planilhas sintéticas localizadas em [`samples/`](samples/):
+- **Aplicação online (Streamlit Community Cloud):** **[https://dashboardmaker.streamlit.app/](https://dashboardmaker.streamlit.app/)** (no plano gratuito, o app entra em suspensão após períodos de inatividade e reativa automaticamente ao abrir).
+- **Execução instantânea com amostras incluídas:** tanto na versão online quanto localmente (`streamlit run app.py`), a página **Analisar** oferece botões de carregamento em **1 clique** para três planilhas sintéticas localizadas em [`samples/`](samples/):
   - [`exemplo_mercado_livre.xlsx`](samples/exemplo_mercado_livre.xlsx) — planilha com metadados iniciais, datas por extenso e valores em BRL;
   - [`exemplo_generico.csv`](samples/exemplo_generico.csv) — CSV separado por `;` para demonstração do mapeamento manual assistido;
   - [`exemplo_shopee_experimental.xlsx`](samples/exemplo_shopee_experimental.xlsx) — planilha sintética baseada na estrutura documentada de pedidos da Shopee.
