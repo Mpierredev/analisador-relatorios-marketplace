@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pandas as pd
 import streamlit as st
 
@@ -13,6 +15,10 @@ from analisador.ui.components.charts import (
     build_status_chart,
     build_timeseries_chart,
     build_top_products_chart,
+)
+from analisador.ui.components.dashboard_diagnostics import (
+    render_financial_and_timing_tab,
+    render_product_diagnostics_section,
 )
 from analisador.ui.components.errors import render_quality_summary, render_ui_error
 from analisador.ui.components.exports import render_export_section
@@ -160,6 +166,34 @@ def _render_products_tab(
     else:
         st.info("Nenhum produto encontrado para o recorte atual.")
     _render_abc_section(bundle)
+    render_product_diagnostics_section(bundle)
+
+
+def _render_dashboard_tabs(
+    bundle: DashboardBundle,
+    result: NormalizationResult,
+    ranking_metric: ProductRankingMetric,
+    date_bounds: tuple[date | None, date | None],
+) -> None:
+    tabs = st.tabs(
+        [
+            "Visão geral",
+            "Financeiro e horários",
+            "Produtos e Curva ABC",
+            "Qualidade e exportação",
+        ]
+    )
+    with tabs[0]:
+        _render_overview_tab(bundle, result.net_revenue_source)
+    with tabs[1]:
+        render_financial_and_timing_tab(bundle, result.net_revenue_source)
+    with tabs[2]:
+        _render_products_tab(bundle, ranking_metric)
+    with tabs[3]:
+        render_quality_summary(result.quality_report)
+        render_export_section(
+            result, start_date=date_bounds[0], end_date=date_bounds[1]
+        )
 
 
 def _render_filtered_dashboard(result: NormalizationResult) -> None:
@@ -178,18 +212,9 @@ def _render_filtered_dashboard(result: NormalizationResult) -> None:
     except Exception as exc:
         render_ui_error(translate_exception(exc))
         return
-    tab_overview, tab_products, tab_quality = st.tabs(
-        ["Visão geral", "Produtos e Curva ABC", "Qualidade e exportação"]
+    _render_dashboard_tabs(
+        bundle, result, filters.ranking_metric, (filters.start_date, filters.end_date)
     )
-    with tab_overview:
-        _render_overview_tab(bundle, result.net_revenue_source)
-    with tab_products:
-        _render_products_tab(bundle, filters.ranking_metric)
-    with tab_quality:
-        render_quality_summary(result.quality_report)
-        render_export_section(
-            result, start_date=filters.start_date, end_date=filters.end_date
-        )
 
 
 def render_dashboard_section() -> None:

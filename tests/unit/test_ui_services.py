@@ -18,6 +18,11 @@ from analisador.ui.components.charts import (
     build_timeseries_chart,
     build_top_products_chart,
 )
+from analisador.ui.components.charts_diagnostics import (
+    build_financial_composition_chart,
+    build_hourly_chart,
+    build_weekday_chart,
+)
 from analisador.ui.components.dashboard import _active_comparison
 from analisador.ui.services import (
     compute_dashboard_bundle_cached,
@@ -139,7 +144,22 @@ def test_cached_dashboard_bundle_and_chart_builders() -> None:
         build_status_chart(bundle.status_distribution).to_dict()["mark"]["type"]
         == "bar"
     )
-    assert build_abc_chart(bundle.abc_curve).to_dict()["mark"]["type"] == "bar"
+    abc_spec = build_abc_chart(bundle.abc_curve).to_dict()
+    assert abc_spec["resolve"]["scale"]["y"] == "independent"
+    assert abc_spec["layer"][0]["mark"]["type"] == "bar"
+    assert abc_spec["layer"][1]["layer"][0]["mark"]["type"] == "line"
+    assert abc_spec["layer"][1]["layer"][1]["mark"]["type"] == "rule"
+
+    assert (
+        build_financial_composition_chart(bundle.financial).to_dict()["mark"]["type"]
+        == "bar"
+    )
+    assert build_weekday_chart(bundle.weekday_sales).to_dict()["mark"]["type"] == "bar"
+    assert build_hourly_chart(bundle.hourly_sales).to_dict()["mark"]["type"] == "bar"
+    assert bundle.financial.gross_revenue == Decimal("400.00")
+    assert len(bundle.product_diagnostics) == 3
+    assert len(bundle.weekday_sales) == 7
+    assert len(bundle.hourly_sales) == 24
 
     filtered_bundle = compute_dashboard_bundle_cached(
         normalized.dataframe,

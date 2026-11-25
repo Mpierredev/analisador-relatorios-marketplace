@@ -108,6 +108,11 @@ def test_app_entrypoint_and_static_pages_render_without_errors() -> None:
         assert not page.exception
         assert page.title[0].value == expected_title
 
+    about_page = AppTest.from_function(_run_about_page, default_timeout=15).run()
+    about_text = " ".join(elem.value for elem in about_page.subheader)
+    assert "Fluxo de processamento" not in about_text
+    assert "Arquitetura" not in about_text
+
 
 def test_analyze_page_gated_flow_from_validation_to_dashboard() -> None:
     content = _ml_xlsx_bytes()
@@ -142,6 +147,10 @@ def test_analyze_page_gated_flow_from_validation_to_dashboard() -> None:
     assert "Faturamento bruto" in metric_labels
     assert "Pedidos" in metric_labels
     assert "Receita líquida" in metric_labels
+    markdown_text = "\n".join(elem.value for elem in at.markdown)
+    assert "Raio-X financeiro" in markdown_text
+    assert "Padrões por dia da semana e horário" in markdown_text
+    assert "Radar de margem e cancelamentos por produto" in markdown_text
 
     # Reset button clears dashboard and validation state
     at.button(key="btn_reset_flow").click().run()

@@ -1,4 +1,4 @@
-"""Project overview, privacy guarantees, limits, and architecture page."""
+"""Project overview, privacy guarantees, and operational limits page."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ _PRIVACY_BULLETS = "\n".join(
 
 
 def render_about_page() -> None:
-    """Render architecture overview, operational limits, and privacy policy."""
+    """Render project overview, privacy guarantees, and operational limits."""
     st.title("Sobre o Analisador")
     st.write(
         "Ferramenta aberta para validar, padronizar e explorar relatórios de vendas "
@@ -42,12 +42,6 @@ def render_about_page() -> None:
         f"por até {CACHE_TTL_SECONDS} segundos."
     )
     st.markdown(limits_md)
-
-    st.subheader("Fluxo de processamento")
-    st.markdown(
-        "`ingestão` → `adapters` → `validação` → `normalização` → "
-        "`análises` → `painel e exportação`"
-    )
 
 
 __all__ = ["render_about_page"]

@@ -113,32 +113,66 @@ _ABC_COLOR_SCALE = alt.Scale(
 )
 
 
-def build_abc_chart(rows: Sequence[AbcCurveRow]) -> alt.Chart:
-    """Build a bar chart colored and labeled by Pareto ABC class."""
-    frame = pd.DataFrame(
-        [
-            {
-                "Produto": row.product_name,
-                "Faturamento": format_brl(row.gross_revenue),
-                "Faturamento (R$)": float(row.gross_revenue),
-                "Acumulado (%)": round(float(row.cumulative_share) * 100, 1),
-                "Classe ABC": f"Classe {row.abc_class.value}",
-            }
-            for row in rows
-        ]
-    )
-    chart = (
+def _build_abc_bars(frame: pd.DataFrame, product_order: list[str]) -> alt.Chart:
+    return cast(
+        alt.Chart,
         alt.Chart(frame)
         .mark_bar()
         .encode(
-            x=alt.X("Produto:N", sort="-y", title="Produto"),
+            x=alt.X("Produto:N", sort=product_order, title="Produto"),
             y=alt.Y("Faturamento (R$):Q", title="Faturamento bruto (R$)"),
             color=alt.Color("Classe ABC:N", scale=_ABC_COLOR_SCALE),
             tooltip=["Produto:N", "Classe ABC:N", "Faturamento:N", "Acumulado (%):Q"],
-        )
-        .properties(height=320)
+        ),
     )
-    return cast(alt.Chart, chart)
+
+
+def _build_abc_cumulative_overlay(
+    frame: pd.DataFrame, product_order: list[str]
+) -> alt.LayerChart:
+    pct_scale = alt.Scale(domain=[0, 100])
+    cum_line = (
+        alt.Chart(frame)
+        .mark_line(point=True, color="#EA580C", strokeWidth=2)
+        .encode(
+            x=alt.X("Produto:N", sort=product_order),
+            y=alt.Y(
+                "Acumulado (%):Q",
+                title="Acumulado (%)",
+                scale=pct_scale,
+                axis=alt.Axis(orient="right"),
+            ),
+            tooltip=["Produto:N", "Acumulado (%):Q", "Classe ABC:N"],
+        )
+    )
+    cutoff_rule = (
+        alt.Chart(pd.DataFrame([{"Corte": 80.0}]))
+        .mark_rule(strokeDash=[5, 5], color="#DC2626")
+        .encode(y=alt.Y("Corte:Q", scale=pct_scale, axis=None))
+    )
+    return cast(alt.LayerChart, alt.layer(cum_line, cutoff_rule))
+
+
+def build_abc_chart(rows: Sequence[AbcCurveRow]) -> alt.LayerChart:
+    """Build a dual-axis Pareto chart with ABC revenue bars and cumulative line."""
+    product_order = [row.product_name for row in rows]
+    records = [
+        {
+            "Produto": row.product_name,
+            "Faturamento": format_brl(row.gross_revenue),
+            "Faturamento (R$)": float(row.gross_revenue),
+            "Acumulado (%)": round(float(row.cumulative_share) * 100, 1),
+            "Classe ABC": f"Classe {row.abc_class.value}",
+        }
+        for row in rows
+    ]
+    frame = pd.DataFrame(records)
+    bars = _build_abc_bars(frame, product_order)
+    overlay = _build_abc_cumulative_overlay(frame, product_order)
+    chart = (
+        alt.layer(bars, overlay).resolve_scale(y="independent").properties(height=340)
+    )
+    return cast(alt.LayerChart, chart)
 
 
 __all__ = [

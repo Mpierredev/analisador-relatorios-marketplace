@@ -13,17 +13,25 @@ import streamlit as st
 
 from analisador.analytics import (
     AbcCurveRow,
+    FinancialBreakdown,
+    HourlySalesRow,
     PeriodComparison,
+    ProductDiagnosticRow,
     ProductRankingMetric,
     ProductRankingRow,
     StatusDistributionRow,
     TimeGranularity,
     TimeSeriesPoint,
+    WeekdaySalesRow,
+    analyze_product_diagnostics,
     build_time_series,
     compare_periods,
     compute_abc_curve,
+    compute_financial_breakdown,
+    compute_hourly_sales,
     compute_kpis,
     compute_status_distribution,
+    compute_weekday_sales,
     filter_by_period,
     rank_products,
 )
@@ -61,6 +69,10 @@ class DashboardBundle:
     top_products: list[ProductRankingRow]
     abc_curve: list[AbcCurveRow]
     status_distribution: list[StatusDistributionRow]
+    financial: FinancialBreakdown
+    product_diagnostics: list[ProductDiagnosticRow]
+    weekday_sales: list[WeekdaySalesRow]
+    hourly_sales: list[HourlySalesRow]
 
 
 def translate_exception(exc: Exception) -> UiError:
@@ -167,6 +179,59 @@ def _safe_period_comparison(
         return None
 
 
+def _build_core_bundle_args(
+    entity_df: pd.DataFrame,
+    scoped_df: pd.DataFrame,
+    start_date: date | None,
+    end_date: date | None,
+    granularity: str,
+    ranking_metric: str,
+) -> tuple[
+    KpiSummary,
+    PeriodComparison | None,
+    list[TimeSeriesPoint],
+    list[ProductRankingRow],
+    list[AbcCurveRow],
+    list[StatusDistributionRow],
+]:
+    metric_enum = ProductRankingMetric(ranking_metric)
+    return (
+        compute_kpis(scoped_df, start_date=start_date, end_date=end_date),
+        _safe_period_comparison(entity_df, start_date, end_date),
+        build_time_series(
+            scoped_df,
+            TimeGranularity(granularity),
+            start_date=start_date,
+            end_date=end_date,
+        ),
+        rank_products(scoped_df, by=metric_enum, limit=DEFAULT_TOP_PRODUCTS_LIMIT),
+        compute_abc_curve(scoped_df),
+        compute_status_distribution(scoped_df),
+    )
+
+
+def _build_diagnostics_bundle_args(
+    scoped_df: pd.DataFrame,
+    start_date: date | None,
+    end_date: date | None,
+) -> tuple[
+    FinancialBreakdown,
+    list[ProductDiagnosticRow],
+    list[WeekdaySalesRow],
+    list[HourlySalesRow],
+]:
+    return (
+        compute_financial_breakdown(
+            scoped_df, start_date=start_date, end_date=end_date
+        ),
+        analyze_product_diagnostics(
+            scoped_df, start_date=start_date, end_date=end_date
+        ),
+        compute_weekday_sales(scoped_df, start_date=start_date, end_date=end_date),
+        compute_hourly_sales(scoped_df, start_date=start_date, end_date=end_date),
+    )
+
+
 def _build_dashboard_bundle(
     entity_df: pd.DataFrame,
     start_date: date | None,
@@ -175,22 +240,23 @@ def _build_dashboard_bundle(
     ranking_metric: str,
 ) -> DashboardBundle:
     scoped_df = filter_by_period(entity_df, start_date, end_date)
+    kpis, comparison, series, top, abc, statuses = _build_core_bundle_args(
+        entity_df, scoped_df, start_date, end_date, granularity, ranking_metric
+    )
+    financial, diagnostics, weekdays, hourly = _build_diagnostics_bundle_args(
+        scoped_df, start_date, end_date
+    )
     return DashboardBundle(
-        kpis=compute_kpis(scoped_df, start_date=start_date, end_date=end_date),
-        comparison=_safe_period_comparison(entity_df, start_date, end_date),
-        time_series=build_time_series(
-            scoped_df,
-            TimeGranularity(granularity),
-            start_date=start_date,
-            end_date=end_date,
-        ),
-        top_products=rank_products(
-            scoped_df,
-            by=ProductRankingMetric(ranking_metric),
-            limit=DEFAULT_TOP_PRODUCTS_LIMIT,
-        ),
-        abc_curve=compute_abc_curve(scoped_df),
-        status_distribution=compute_status_distribution(scoped_df),
+        kpis=kpis,
+        comparison=comparison,
+        time_series=series,
+        top_products=top,
+        abc_curve=abc,
+        status_distribution=statuses,
+        financial=financial,
+        product_diagnostics=diagnostics,
+        weekday_sales=weekdays,
+        hourly_sales=hourly,
     )
 
 
