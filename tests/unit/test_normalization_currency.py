@@ -120,6 +120,12 @@ def test_parse_currency_series_handles_empty_and_all_blank() -> None:
     blank_res = parse_currency_series_to_cents(pd.Series(["", None, pd.NA]))
     assert blank_res.isna().all()
 
+    assert parse_currency_cents("1,23,45", decimal_style=DecimalStyle.BR) is None
+    assert (
+        parse_currency_cents("1,234,567", decimal_style=DecimalStyle.AUTO)
+        == 123_456_700
+    )
+
 
 @settings(max_examples=100, deadline=None)
 @given(cents=st.integers(min_value=-(10**11), max_value=10**11))

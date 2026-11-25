@@ -11,12 +11,19 @@ import pandas as pd
 import pytest
 
 from analisador.analytics import (
+    TimeGranularity,
+    build_time_series,
     cents_to_brl_decimal,
+    compare_periods,
     compute_kpis,
     compute_status_distribution,
     filter_by_period,
     filter_sales,
+    rank_products,
 )
+from analisador.analytics.comparison import _resolve_datetime_windows
+from analisador.analytics.filters import build_order_key_series, count_unique_orders
+from analisador.analytics.timeseries import _compute_avg_ticket
 from analisador.core.config import DEFAULT_TIMEZONE
 from analisador.core.enums import OrderStatus
 from analisador.core.errors import MissingRequiredColumnsError
@@ -250,3 +257,66 @@ def test_filter_helpers_and_validation_errors() -> None:
 
     with pytest.raises(ValueError, match="Status de pedido inválido"):
         filter_sales(dataframe, exclude_statuses=("desconhecido",))
+
+
+def test_analytics_optional_columns_naive_dates_and_bounds() -> None:
+    naive_df = pd.DataFrame(
+        {
+            "order_date": [
+                pd.Timestamp("2025-01-06 10:00:00"),
+                pd.Timestamp("2025-02-10 12:00:00"),
+            ],
+            "status": [OrderStatus.COMPLETED.value, "status_nao_mapeado"],
+            "product_name": ["Item Zero", "Item Outro"],
+            "quantity": pd.Series([1, 2], dtype="int32"),
+            "gross_revenue": pd.Series([0, 0], dtype="int64"),
+        }
+    )
+    assert count_unique_orders(naive_df) == 2
+    assert list(build_order_key_series(naive_df)) == [0, 1]
+
+    ranked = rank_products(naive_df)
+    assert len(ranked) == 2
+    assert all(row.sku is None for row in ranked)
+    assert all(row.net_revenue is None for row in ranked)
+    assert all(row.revenue_share == Decimal("0.0000") for row in ranked)
+
+    dist = compute_status_distribution(naive_df)
+    assert {row.status for row in dist} == {OrderStatus.COMPLETED, OrderStatus.OTHER}
+
+    aware_bound_filtered = filter_by_period(
+        naive_df,
+        start_date=datetime(2025, 1, 1, tzinfo=_TZ),
+        end_date=datetime(2025, 1, 31, tzinfo=_TZ),
+    )
+    assert len(aware_bound_filtered) == 1
+
+    weekly = build_time_series(
+        naive_df,
+        TimeGranularity.WEEKLY,
+        start_date=date(2025, 1, 2),
+        end_date=date(2025, 1, 20),
+    )
+    assert len(weekly) >= 3
+    monthly = build_time_series(
+        naive_df,
+        TimeGranularity.MONTHLY,
+        start_date=date(2025, 1, 15),
+        end_date=date(2025, 3, 5),
+    )
+    assert len(monthly) == 3
+    assert _compute_avg_ticket(Decimal("100.00"), 0) == Decimal("0.00")
+
+    aware_df = naive_df.copy()
+    aware_df["order_date"] = aware_df["order_date"].dt.tz_localize(_TZ)
+    aware_df["order_id"] = pd.Series(["ORD-A", pd.NA], dtype="string")
+    assert build_order_key_series(aware_df).nunique() == 2
+
+    with pytest.raises(ValueError, match="posterior"):
+        _resolve_datetime_windows(date(2025, 2, 10), datetime(2025, 2, 1, 12, 0))
+    with pytest.raises(ValueError, match="posterior"):
+        compare_periods(
+            aware_df,
+            start_date=date(2025, 2, 10),
+            end_date=datetime(2025, 2, 1, 12, 0, tzinfo=_TZ),
+        )

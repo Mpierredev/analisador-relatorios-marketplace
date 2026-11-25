@@ -28,6 +28,7 @@ from analisador.validation.suggestions import (
             InferredColumnType.DATE,
         ),
         (["00123", "0042", "09981"], InferredColumnType.IDENTIFIER),
+        (["007", "008", "009"], InferredColumnType.IDENTIFIER),
         (["2000009945957908", "2000010740312006"], InferredColumnType.IDENTIFIER),
         (["FONE-BT-01", "MLB3765686597", "TEC-WL-03"], InferredColumnType.IDENTIFIER),
         (["1", "2", "1.0", "5.0"], InferredColumnType.INTEGER),

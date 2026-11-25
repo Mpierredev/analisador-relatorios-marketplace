@@ -18,6 +18,11 @@ from analisador.core.models import QualityReport, ValidationReport
 from analisador.core.schema import CANONICAL_COLUMNS
 from analisador.ingestion import read_report
 from analisador.normalization import normalize_report
+from analisador.normalization.dtypes import (
+    compact_categorical_text,
+    compact_quantity_series,
+)
+from analisador.normalization.quality import count_duplicate_rows
 from analisador.validation import validate_report
 
 FIXTURES_DIR = Path(__file__).resolve().parent.parent / "fixtures"
@@ -386,3 +391,16 @@ def test_normalize_report_tracks_net_revenue_source() -> None:
         validate_report(unavail_df, Marketplace.GENERIC, manual_mapping=unavail_map),
     )
     assert unavail_res.net_revenue_source is NetRevenueSource.UNAVAILABLE
+
+
+def test_dtype_compaction_and_empty_duplicate_guard() -> None:
+    empty_qty = compact_quantity_series(pd.Series([], dtype="Int64"))
+    assert str(empty_qty.dtype) == "int32"
+
+    large_qty = compact_quantity_series(pd.Series([3_000_000_000], dtype="Int64"))
+    assert str(large_qty.dtype) == "int64"
+
+    empty_txt = compact_categorical_text(pd.Series([], dtype="string"))
+    assert len(empty_txt) == 0
+
+    assert count_duplicate_rows(pd.DataFrame(), has_mapped_order_id=True) == 0
