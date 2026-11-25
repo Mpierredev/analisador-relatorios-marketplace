@@ -1,66 +1,33 @@
 # Analisador de Relatórios de Marketplaces
 
-![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)
-![Licença MIT](https://img.shields.io/badge/Licen%C3%A7a-MIT-green)
-[![CI](https://github.com/Mpierredev/analisador-relatorios-marketplace/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Mpierredev/analisador-relatorios-marketplace/actions/workflows/ci.yml)
+Aplicação web gratuita para validar, padronizar e analisar relatórios de vendas exportados do Mercado Livre, Shopee e planilhas CSV/XLSX genéricas, sem banco de dados e com processamento em memória.
+
 [![Demo ao vivo](https://img.shields.io/badge/Demo-Streamlit%20Cloud-FF4B4B?logo=streamlit&logoColor=white)](https://dashboardmaker.streamlit.app/)
+![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)
+[![CI](https://github.com/Mpierredev/analisador-relatorios-marketplace/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Mpierredev/analisador-relatorios-marketplace/actions/workflows/ci.yml)
+![Licença MIT](https://img.shields.io/badge/Licen%C3%A7a-MIT-green)
 
-Aplicação web gratuita em Streamlit para validar, normalizar, diagnosticar e analisar relatórios de vendas exportados de marketplaces (Mercado Livre, Shopee e planilhas CSV/XLSX genéricas), transformando exportações brutas e heterogêneas em um dashboard interativo com exportação padronizada — **sem banco de dados, sem cadastro e com processamento integralmente em memória**.
+**Demo ao vivo:** [dashboardmaker.streamlit.app](https://dashboardmaker.streamlit.app/) (contém três planilhas sintéticas carregáveis em um clique para testar sem enviar arquivos próprios).
 
-![Dashboard do Analisador de Relatórios de Marketplaces](docs/assets/dashboard.png)
+![Painel de vendas do Analisador de Relatórios de Marketplaces](docs/assets/dashboard.png)
 
----
+## Por que este projeto existe
 
-## O problema que resolve
+Quem vende em marketplaces no Brasil costuma baixar planilhas bem diferentes entre si: arquivos com linhas de título antes do cabeçalho, encoding Latin-1, separador `;`, valores no formato `R$ 1.234,56`, datas escritas por extenso (`25 de novembro de 2024 11:43 hs.`) e status diferentes em cada canal.
 
-Vendedores de marketplaces exportam relatórios com pré-cabeçalhos de metadados, encodings variados (`UTF-8`, `UTF-8 BOM`, `UTF-16`, `Latin-1`/`cp1252`), separadores diferentes (`,`, `;`, tabulação), abas múltiplas em `.xlsx`, valores monetários no padrão brasileiro (`R$ 1.234,56`) ou internacional (`1234.56`), datas por extenso em português/espanhol e status inconsistentes.
+Construí esta ferramenta para automatizar a limpeza, validação e análise dessas exportações antes que virem painel, mantendo o processamento exclusivamente em memória.
 
-Em vez de montar planilhas manuais a cada fechamento, a ferramenta aplica um fluxo único e explícito:
+## O que o aplicativo faz
 
-```text
-Selecionar formato -> Enviar arquivo (.csv/.xlsx) -> Validar / mapear -> Gerar dashboard -> Exportar CSV/Excel
-```
+- Lê arquivos `.csv` e `.xlsx` em memória, identificando encoding, delimitador, aba e linha de cabeçalho.
+- Valida colunas obrigatórias contra formatos conhecidos e libera um mapeamento manual assistido para planilhas fora do padrão.
+- Padroniza datas para `America/Sao_Paulo`, converte valores monetários para centavos inteiros (`int64`) e gera diagnóstico de duplicidades, nulos, datas inválidas e *outliers*.
+- Calcula faturamento bruto, receita líquida (indicando quando é informada pela planilha ou derivada de taxas e frete), ticket médio, cancelamentos, séries temporais, ranking de produtos e Curva ABC.
+- Exporta os dados tratados em CSV (com BOM para Excel) e gera um resumo gerencial em `.xlsx` com cinco abas.
 
----
+## Como rodar localmente
 
-## Demo ao vivo e amostras prontas
-
-- **Aplicação online (Streamlit Community Cloud):** **[https://dashboardmaker.streamlit.app/](https://dashboardmaker.streamlit.app/)** (no plano gratuito, o app entra em suspensão após períodos de inatividade e reativa automaticamente ao abrir).
-- **Execução instantânea com amostras incluídas:** tanto na versão online quanto localmente (`streamlit run app.py`), a página **Analisar** oferece botões de carregamento em **1 clique** para três planilhas sintéticas localizadas em [`samples/`](samples/):
-  - [`exemplo_mercado_livre.xlsx`](samples/exemplo_mercado_livre.xlsx) — planilha com metadados iniciais, datas por extenso e valores em BRL;
-  - [`exemplo_generico.csv`](samples/exemplo_generico.csv) — CSV separado por `;` para demonstração do mapeamento manual assistido;
-  - [`exemplo_shopee_experimental.xlsx`](samples/exemplo_shopee_experimental.xlsx) — planilha sintética baseada na estrutura documentada de pedidos da Shopee.
-
----
-
-## Recursos principais
-
-- **Ingestão resiliente em memória:** lê `.csv` e `.xlsx` (com seleção explícita de aba quando há múltiplas abas), detecta encoding, separador e a linha real de cabeçalho mesmo quando há linhas de título ou resumo no topo da planilha.
-- **Detecção automática e validação com trava explícita:** pontua compatibilidade com os adapters registrados, detalha colunas obrigatórias/opcionais encontradas e mantém o botão **Gerar dashboard** bloqueado até que o arquivo seja validado ou mapeado manualmente.
-- **Mapeamento manual assistido:** planilhas fora do padrão conhecido são mapeadas com sugestões automáticas baseadas em similaridade de cabeçalhos e inferência de tipo de coluna (data, quantidade inteira, valor monetário, identificador).
-- **Normalização e relatório de qualidade:** converte moeda em centavos inteiros (`int64`), datas com `dayfirst` explícito para `America/Sao_Paulo`, deriva receita bruta e líquida (indicando claramente quando é informada vs. derivada) e aponta duplicidades, nulos, datas inválidas, quantidades não positivas e *outliers* por IQR.
-- **Dashboard interativo:** cartões de KPI com comparativo contra o período anterior equivalente, séries temporais (diária, semanal e mensal), ranking de produtos por receita ou quantidade, Curva ABC (Pareto), distribuição de status e filtros dinâmicos.
-- **Exportação gerencial e ajuda integrada:** gera CSV normalizado (com BOM opcional compatível com Excel em português) e workbook Excel formatado com cinco abas (`Resumo KPIs`, `Série Temporal`, `Top Produtos`, `Curva ABC` e `Status e Qualidade`), além das páginas **Formatos suportados** e **Como exportar**.
-
----
-
-## Formatos suportados
-
-Os adapters são **compatíveis com exportações observadas** nas centrais de vendedores das plataformas abaixo (não constituem contrato oficial das plataformas). Detalhes de todos os aliases e status aceitos estão em [`docs/formatos-suportados.md`](docs/formatos-suportados.md).
-
-| Formato | Chave | Nível de suporte | Idiomas de cabeçalho |
-|---|---|---|---|
-| **Mercado Livre** | `mercado_livre` | `verificado` | Português, Espanhol e Inglês |
-| **Shopee** | `shopee` | `experimental` | Português, Inglês e Espanhol |
-| **CSV/XLSX genérico** | `generico` | `verificado` | Mapeamento manual livre com sugestão |
-
----
-
-## Instalação e uso
-
-Requer **Python 3.12+**.
-
-### 1. Clonar e preparar o ambiente virtual
+Requer Python 3.12 ou superior.
 
 ```bash
 git clone https://github.com/Mpierredev/analisador-relatorios-marketplace.git
@@ -68,77 +35,36 @@ cd analisador-relatorios-marketplace
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
-```
-
-Para desenvolvimento, testes e validação estática:
-
-```bash
-pip install -e ".[dev]"
-pre-commit install
-```
-
-### 2. Executar a aplicação
-
-```bash
 streamlit run app.py
 ```
 
-Acesse `http://localhost:8501` no navegador.
-
-### 3. Scripts utilitários
+Para rodar testes e verificações de código:
 
 ```bash
-# Regenerar planilhas sintéticas em samples/
-python scripts/gerar_amostras.py
-
-# Executar benchmark sintético de volume e cardinalidade (até 200.000 linhas)
-python scripts/benchmark_desempenho.py
-```
-
-### 4. Verificações de qualidade
-
-```bash
+pip install -e ".[dev]"
 ruff check .
-ruff format --check .
 mypy
 pytest --cov
 ```
 
----
+Arquivos sintéticos de exemplo estão em [`samples/`](samples/) e podem ser recriados com `python scripts/gerar_amostras.py`. Há também um benchmark sintético até 200 mil linhas em `scripts/benchmark_desempenho.py` (`3,4s` para 50 mil linhas com 10 mil SKUs e `12,9s` no limite de 200 mil linhas).
 
-## Desempenho validado
+## Formatos aceitos e limites
 
-Operações de normalização, agrupamento analítico e exportação CSV são vetorizadas em pandas/NumPy, com compactação automática de tipos canônicos (`int32` e `category`) e cache isolado por sessão sem re-hashing do `DataFrame`. Medições sintéticas de referência executadas via [`scripts/benchmark_desempenho.py`](scripts/benchmark_desempenho.py):
+| Formato | Chave | Suporte | Observação |
+|---|---|---|---|
+| Mercado Livre | `mercado_livre` | Verificado | Exportações de vendas em PT, ES e EN |
+| Shopee | `shopee` | Experimental | Baseado em cabeçalhos documentados da Central do Vendedor |
+| CSV / XLSX genérico | `generico` | Verificado | Mapeamento manual com sugestão por tipo e nome |
 
-| Cenário sintético | Ingestão | Normalização | Análises | Exportação CSV | Tempo total | Memória DataFrame | Pico Python |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| **50.000 linhas / 250 SKUs** (`5,43 MB`) | `0,156s` | `2,460s` | `0,261s` | `0,277s` | **`3,172s`** | `3,83 MB` | `31,26 MB` |
-| **50.000 linhas / 10.000 SKUs** (`5,43 MB`) | `0,156s` | `2,505s` | `0,449s` | `0,305s` | **`3,432s`** | `4,29 MB` | `31,30 MB` |
-| **200.000 linhas / 1.000 SKUs** (`21,74 MB`) | `0,535s` | `10,119s` | `0,890s` | `1,339s` | **`12,901s`** | `15,33 MB` | `114,92 MB` |
+- **Privacidade:** arquivos enviados nunca são gravados em disco, banco ou log; colunas extras de compradores (CPF, e-mail, endereço) são descartadas durante a normalização.
+- **Limites operacionais:** até `25 MB` e `200.000` linhas por planilha. No plano gratuito do Streamlit Community Cloud, o app hiberna após períodos sem acesso e acorda ao abrir o link.
 
----
+## Documentação
 
-## Privacidade e limites operacionais
-
-- **Zero persistência:** arquivos enviados existem somente em memória durante a sessão e nunca são gravados em disco ou banco de dados.
-- **Zero vazamento em logs:** registros estruturados capturam apenas métricas técnicas agregadas (extensão, contagem de bytes/linhas/colunas e nome de classe de exceção), nunca nomes de arquivo, compradores, CPFs, endereços ou conteúdo de células.
-- **Limites por arquivo:** extensões `.csv` e `.xlsx`, até **25 MB** e **200.000 linhas** por envio.
-- **Cache restrito:** `@st.cache_data` opera apenas sobre dados canônicos (sem colunas extras de PII), isolado por identificador aleatório de sessão (`STATE_SESSION_NONCE`), limitado a `16` entradas e expiração de `300s`.
-- **Custo de infraestrutura:** R$ 0 (aplicação totalmente *stateless*).
-
----
-
-## Documentação adicional
-
-- [Arquitetura e fluxo de dados](docs/arquitetura.md)
-- [Formatos suportados e aliases aceitos](docs/formatos-suportados.md)
-- [Como adicionar um novo adapter](docs/como-adicionar-adapter.md)
-- [Checklist de verificação dos cinco cenários de erro](docs/checklist-cenarios-erro.md)
-- [Guia de contribuição](CONTRIBUTING.md)
-- [Histórico de mudanças](CHANGELOG.md)
-
----
-
-## Licença
-
-Distribuído sob a licença **MIT**. Consulte [`LICENSE`](LICENSE) para mais detalhes.
+- [Arquitetura e esquema canônico](docs/arquitetura.md)
+- [Formatos suportados e aliases](docs/formatos-suportados.md)
+- [Como adicionar um adapter](docs/como-adicionar-adapter.md)
+- [Checklist de cenários de erro](docs/checklist-cenarios-erro.md)
+- [Como contribuir](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md) · [Licença MIT](LICENSE)

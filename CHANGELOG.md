@@ -14,7 +14,9 @@ e este projeto adota o [Versionamento Semântico](https://semver.org/lang/pt-BR/
 
 ### Alterado
 
+- Gráficos de série temporal e tooltips em Altair formatados em `pt-BR` (`%d/%m` e `%m/%Y`), painel principal organizado em abas (`Visão geral`, `Produtos e Curva ABC`, `Qualidade e exportação`), bloco de upload recolhido após gerar o painel e deltas comparativos exibidos apenas quando há base no período anterior.
 - Resolução do diretório `samples/` em `src/analisador/ui/samples.py` passou a incluir *fallback* para `Path.cwd() / "samples"`, garantindo funcionamento em instalações não editáveis e em ambientes de nuvem.
+- `README.md` reescrito em formato direto com captura atualizada em `docs/assets/dashboard.png` e organização dos testes por domínio.
 
 ## [1.0.0] - 2026-11-25
 
