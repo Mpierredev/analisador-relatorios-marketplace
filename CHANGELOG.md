@@ -13,7 +13,11 @@ e este projeto adota o [Versionamento Semântico](https://semver.org/lang/pt-BR/
 - Radar de margem líquida e taxa de cancelamento por produto (`analyze_product_diagnostics`), além de padrões temporais por dia da semana e hora do dia em `America/Sao_Paulo` (`compute_weekday_sales` e `compute_hourly_sales` em `src/analisador/analytics/patterns.py`).
 - Sexta aba `Diagnóstico Financeiro` na exportação Excel (`src/analisador/export/excel_diagnostics.py`).
 - Publicação no Streamlit Community Cloud (`https://dashboardmaker.streamlit.app/`) e link direto da demonstração ao vivo no `README.md`.
-- Arquivos `requirements.txt` (dependências com versões fixadas e instalação local `-e .`) e `runtime.txt` (`python-3.12`) para deploy no Streamlit Community Cloud.
+- Arquivos `requirements.txt` (dependências de execução com versões fixadas) e `runtime.txt` (`python-3.12`) para deploy no Streamlit Community Cloud.
+
+### Corrigido
+
+- `app.py` passou a incluir `src/` diretamente em `sys.path` e `requirements.txt` removeu `-e .`, garantindo que atualizações em `src/analisador/` reflitam imediatamente após o redeploy no Streamlit Community Cloud.
 
 ### Alterado
 
