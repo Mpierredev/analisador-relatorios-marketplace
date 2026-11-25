@@ -7,6 +7,12 @@ from analisador.analytics.comparison import (
     PeriodComparison,
     compare_periods,
 )
+from analisador.analytics.diagnostics import (
+    FinancialBreakdown,
+    ProductDiagnosticRow,
+    analyze_product_diagnostics,
+    compute_financial_breakdown,
+)
 from analisador.analytics.filters import (
     CORE_ANALYTICS_FIELDS,
     DEFAULT_EXCLUDED_STATUSES,
@@ -20,6 +26,12 @@ from analisador.analytics.kpis import (
     StatusDistributionRow,
     compute_kpis,
     compute_status_distribution,
+)
+from analisador.analytics.patterns import (
+    HourlySalesRow,
+    WeekdaySalesRow,
+    compute_hourly_sales,
+    compute_weekday_sales,
 )
 from analisador.analytics.products import (
     AbcClass,
@@ -40,19 +52,27 @@ __all__ = [
     "DEFAULT_EXCLUDED_STATUSES",
     "AbcClass",
     "AbcCurveRow",
+    "FinancialBreakdown",
+    "HourlySalesRow",
     "MetricDelta",
     "PeriodComparison",
+    "ProductDiagnosticRow",
     "ProductRankingMetric",
     "ProductRankingRow",
     "StatusDistributionRow",
     "TimeGranularity",
     "TimeSeriesPoint",
+    "WeekdaySalesRow",
+    "analyze_product_diagnostics",
     "build_time_series",
     "cents_to_brl_decimal",
     "compare_periods",
     "compute_abc_curve",
+    "compute_financial_breakdown",
+    "compute_hourly_sales",
     "compute_kpis",
     "compute_status_distribution",
+    "compute_weekday_sales",
     "count_unique_orders",
     "filter_by_period",
     "filter_sales",
