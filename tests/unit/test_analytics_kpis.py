@@ -229,6 +229,11 @@ def test_filter_helpers_and_validation_errors() -> None:
     )
     assert list(jan_4["order_id"]) == ["ORD-3"]
 
+    only_start = filter_by_period(dataframe, start_date=date(2025, 1, 4))
+    assert len(only_start) == 2
+    only_end = filter_by_period(dataframe, end_date=date(2025, 1, 2))
+    assert len(only_end) == 2
+
     with pytest.raises(MissingRequiredColumnsError) as missing_exc:
         compute_kpis(dataframe.drop(columns=["gross_revenue"]))
     assert missing_exc.value.missing_columns == ("gross_revenue",)

@@ -70,8 +70,30 @@ def test_parse_date_handles_dst_and_invalid_dates() -> None:
     assert series_dst.parsed_count == 1
     assert series_dst.series.iloc[0].hour == 1
 
-    for invalid in ("", "  ", "31/02/2026", "31 de fevereiro de 2025", "not-a-date"):
+    for invalid in (
+        "",
+        "  ",
+        "31/02/2026",
+        "31 de fevereiro de 2025",
+        "15 de mes_invalido de 2025",
+        "2025-13-45T10:00:00Z",
+        "not-a-date",
+    ):
         assert parse_date_value(invalid) is None
+
+
+def test_parse_date_series_aware_iso_and_textual_without_time() -> None:
+    aware_res = parse_date_series(
+        pd.Series(["2026-10-15T17:30:00Z", "2026-10-16T12:00:00-03:00"])
+    )
+    assert aware_res.parsed_count == 2
+    assert aware_res.invalid_count == 0
+    assert aware_res.series.iloc[0].hour == 14
+
+    textual_res = parse_date_series(pd.Series(["15 de outubro de 2025"]))
+    assert textual_res.parsed_count == 1
+    assert textual_res.series.iloc[0].month == 10
+    assert textual_res.series.iloc[0].day == 15
 
 
 def test_parse_date_series_tracks_empty_invalid_and_sample_limit() -> None:

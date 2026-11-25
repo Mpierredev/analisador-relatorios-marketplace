@@ -69,6 +69,14 @@ def test_export_canonical_csv_with_bom_and_decimal_values() -> None:
     no_bom = export_canonical_csv(dataframe.iloc[0:0], include_bom=False)
     assert not no_bom.startswith(b"\xef\xbb\xbf")
 
+    neg_and_all_na = dataframe.copy()
+    neg_and_all_na["unit_price"] = pd.Series([pd.NA, pd.NA], dtype="Int64")
+    neg_and_all_na["net_revenue"] = pd.Series([-5, -105], dtype="Int64")
+    csv_neg = export_canonical_csv(neg_and_all_na, include_bom=False).decode("utf-8")
+    parsed_neg = pd.read_csv(io.StringIO(csv_neg), dtype=str, keep_default_na=False)
+    assert list(parsed_neg["unit_price"]) == ["", ""]
+    assert list(parsed_neg["net_revenue"]) == ["-0.05", "-1.05"]
+
 
 def test_export_summary_excel_creates_five_formatted_sheets() -> None:
     dataframe = _sample_canonical_df()
@@ -111,3 +119,6 @@ def test_export_summary_excel_creates_five_formatted_sheets() -> None:
         assert abc_rows[0][7] == "A"
     finally:
         wb.close()
+
+    no_quality_xlsx = export_summary_excel(dataframe, quality_report=None)
+    assert len(no_quality_xlsx) > 0
