@@ -8,7 +8,9 @@ from typing import Final
 
 from analisador.core.enums import Marketplace
 
-_SAMPLES_DIR: Final[Path] = Path(__file__).resolve().parents[3] / "samples"
+_SAMPLES_DIR_REL_CANDIDATE: Final[Path] = (
+    Path(__file__).resolve().parents[3] / "samples"
+)
 _CSV_MIME: Final[str] = "text/csv"
 _XLSX_MIME: Final[str] = (
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -64,6 +66,12 @@ _SAMPLE_ASSETS: Final[tuple[SampleAsset, ...]] = (
 )
 
 
+def _resolve_samples_dir() -> Path:
+    if _SAMPLES_DIR_REL_CANDIDATE.is_dir():
+        return _SAMPLES_DIR_REL_CANDIDATE
+    return Path.cwd() / "samples"
+
+
 def list_sample_assets() -> tuple[SampleAsset, ...]:
     """Return available bundled synthetic sample spreadsheets."""
     return _SAMPLE_ASSETS
@@ -71,7 +79,7 @@ def list_sample_assets() -> tuple[SampleAsset, ...]:
 
 def load_sample_bytes(asset: SampleAsset) -> bytes:
     """Read bytes of a bundled synthetic sample file from samples/."""
-    target = _SAMPLES_DIR / asset.filename
+    target = _resolve_samples_dir() / asset.filename
     return target.read_bytes()
 
 

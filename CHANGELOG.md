@@ -7,6 +7,14 @@ e este projeto adota o [Versionamento Semântico](https://semver.org/lang/pt-BR/
 
 ## [Não publicado]
 
+### Adicionado
+
+- Arquivos `requirements.txt` (dependências com versões fixadas e instalação local `-e .`) e `runtime.txt` (`python-3.12`) para deploy no Streamlit Community Cloud.
+
+### Alterado
+
+- Resolução do diretório `samples/` em `src/analisador/ui/samples.py` passou a incluir *fallback* para `Path.cwd() / "samples"`, garantindo funcionamento em instalações não editáveis e em ambientes de nuvem.
+
 ## [1.0.0] - 2026-11-25
 
 ### Adicionado

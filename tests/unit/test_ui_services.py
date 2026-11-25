@@ -166,3 +166,28 @@ def test_cached_dashboard_bundle_and_chart_builders() -> None:
         ProductRankingMetric.REVENUE.value,
     )
     assert isolated_bundle.kpis.gross_revenue == Decimal("300.00")
+
+
+def test_resolve_samples_dir_fallback_to_cwd(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: object,
+) -> None:
+    from pathlib import Path
+
+    from analisador.ui import samples as samples_mod
+
+    assert isinstance(tmp_path, Path)
+    cwd_samples = tmp_path / "samples"
+    cwd_samples.mkdir()
+    target_file = cwd_samples / "exemplo_generico.csv"
+    target_file.write_bytes(b"col_a;col_b\n1;2\n")
+
+    monkeypatch.setattr(
+        samples_mod, "_SAMPLES_DIR_REL_CANDIDATE", tmp_path / "missing_samples"
+    )
+    monkeypatch.chdir(tmp_path)
+
+    generic_asset = next(
+        asset for asset in samples_mod.list_sample_assets() if asset.key == "generico"
+    )
+    assert samples_mod.load_sample_bytes(generic_asset) == b"col_a;col_b\n1;2\n"
