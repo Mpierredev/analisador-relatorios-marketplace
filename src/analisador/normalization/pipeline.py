@@ -15,8 +15,8 @@ from analisador.core.config import DEFAULT_TIMEZONE
 from analisador.core.enums import CanonicalField, DecimalStyle, NetRevenueSource
 from analisador.core.errors import MissingRequiredColumnsError, NormalizationError
 from analisador.core.models import QualityReport, ValidationReport
-from analisador.core.schema import CANONICAL_COLUMNS
 from analisador.normalization.dates import DateParseResult, parse_date_series
+from analisador.normalization.dtypes import finalize_canonical_frame
 from analisador.normalization.fields import (
     MonetaryFieldsResult,
     QuantityParseResult,
@@ -190,9 +190,7 @@ def _assemble_canonical_dataframe(
         CanonicalField.STATUS.value: normalized.status[0].loc[valid_mask],
         CanonicalField.PRODUCT_NAME.value: normalized.product[0].loc[valid_mask],
         CanonicalField.SKU.value: normalized.sku[0].loc[valid_mask],
-        CanonicalField.QUANTITY.value: (
-            normalized.qty_result.series.loc[valid_mask].astype("int64")
-        ),
+        CanonicalField.QUANTITY.value: normalized.qty_result.series.loc[valid_mask],
         CanonicalField.UNIT_PRICE.value: mon.unit_price.loc[valid_mask],
         CanonicalField.GROSS_REVENUE.value: mon.gross_revenue.loc[valid_mask].astype(
             "int64"
@@ -200,12 +198,8 @@ def _assemble_canonical_dataframe(
         CanonicalField.FEES.value: mon.fees.loc[valid_mask],
         CanonicalField.SHIPPING_COST.value: mon.shipping_cost.loc[valid_mask],
         CanonicalField.NET_REVENUE.value: mon.net_revenue.loc[valid_mask],
-        CanonicalField.MARKETPLACE.value: pd.Series(
-            [marketplace_key] * len(index), index=index, dtype="category"
-        ),
     }
-    ordered_cols = [field.value for field in CANONICAL_COLUMNS]
-    return pd.DataFrame(raw_map, index=index)[ordered_cols].reset_index(drop=True)
+    return finalize_canonical_frame(raw_map, index, marketplace_key)
 
 
 def _collect_null_counts(

@@ -35,6 +35,24 @@ def cents_to_brl_decimal(cents: int | Decimal) -> Decimal:
     return amount.quantize(_CENT_QUANTIZER, rounding=ROUND_HALF_UP)
 
 
+def build_order_key_series(dataframe: pd.DataFrame) -> pd.Series[Any]:
+    """Return a per-row order identifier series treating nulls as distinct."""
+    order_col = CanonicalField.ORDER_ID.value
+    if order_col not in dataframe.columns:
+        return pd.Series(range(len(dataframe)), index=dataframe.index, dtype="int64")
+    order_ids: pd.Series[Any] = dataframe[order_col].astype("string")
+    null_mask = order_ids.isna()
+    if not null_mask.any():
+        return order_ids
+    fallback = pd.Series(
+        [f"na:{pos}" for pos in range(len(dataframe))],
+        index=dataframe.index,
+        dtype="string",
+    )
+    prefixed = "id:" + order_ids.fillna("")
+    return prefixed.where(~null_mask, fallback)
+
+
 def count_unique_orders(dataframe: pd.DataFrame) -> int:
     """Count distinct orders using order_id, accounting for any null entries."""
     if dataframe.empty:
@@ -177,6 +195,7 @@ def filter_sales(
 __all__ = [
     "CORE_ANALYTICS_FIELDS",
     "DEFAULT_EXCLUDED_STATUSES",
+    "build_order_key_series",
     "cents_to_brl_decimal",
     "count_unique_orders",
     "filter_by_period",

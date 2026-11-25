@@ -11,10 +11,11 @@ from typing import Any, Final
 
 import pandas as pd
 
+from analisador.analytics._grouping import extract_optional_brl_sums
 from analisador.analytics.filters import (
     DEFAULT_EXCLUDED_STATUSES,
+    build_order_key_series,
     cents_to_brl_decimal,
-    count_unique_orders,
     filter_by_period,
     filter_sales,
     resolve_period_bounds,
@@ -98,39 +99,16 @@ def _single_bucket_timestamp(
     return normalized.replace(day=1)
 
 
-def _sum_optional_net_brl(group: pd.DataFrame) -> Decimal | None:
-    net_col = CanonicalField.NET_REVENUE.value
-    if net_col not in group.columns:
-        return None
-    non_null: pd.Series[Any] = group[net_col].dropna()
-    return None if non_null.empty else cents_to_brl_decimal(int(non_null.sum()))
+def _compute_avg_ticket(gross_brl: Decimal, orders: int) -> Decimal:
+    if orders <= 0:
+        return _ZERO_BRL
+    return (gross_brl / Decimal(orders)).quantize(_ZERO_BRL, rounding=ROUND_HALF_UP)
 
 
-def _aggregate_group_to_point(
-    bucket_date: date,
-    group: pd.DataFrame,
-    granularity: TimeGranularity,
-) -> TimeSeriesPoint:
-    """Aggregate one bucket slice into a TimeSeriesPoint."""
-    orders = count_unique_orders(group)
-    items = int(group[CanonicalField.QUANTITY.value].sum())
-    gross_brl = cents_to_brl_decimal(
-        int(group[CanonicalField.GROSS_REVENUE.value].sum())
-    )
-    avg_ticket = (
-        (gross_brl / Decimal(orders)).quantize(_ZERO_BRL, rounding=ROUND_HALF_UP)
-        if orders > 0
-        else _ZERO_BRL
-    )
-    return TimeSeriesPoint(
-        period_start=bucket_date,
-        granularity=granularity,
-        gross_revenue=gross_brl,
-        net_revenue=_sum_optional_net_brl(group),
-        order_count=orders,
-        item_count=items,
-        average_ticket=avg_ticket,
-    )
+def _to_bucket_date(bucket_ts: object) -> date:
+    if isinstance(bucket_ts, pd.Timestamp):
+        return bucket_ts.date()
+    return pd.Timestamp(str(bucket_ts)).date()
 
 
 def _empty_point(
@@ -171,29 +149,69 @@ def _build_full_bucket_index(
     return [ts.date() for ts in pd.date_range(min_bucket, max_bucket, freq=freq)]
 
 
+def _build_bucket_frame(
+    sales_df: pd.DataFrame,
+    granularity: TimeGranularity,
+) -> pd.DataFrame:
+    cols: dict[str, pd.Series[Any]] = {
+        "_bucket": _compute_bucket_dates(
+            sales_df[CanonicalField.ORDER_DATE.value], granularity
+        ),
+        "_order_key": build_order_key_series(sales_df),
+        "_qty": sales_df[CanonicalField.QUANTITY.value],
+        "_gross": sales_df[CanonicalField.GROSS_REVENUE.value],
+    }
+    net_col = CanonicalField.NET_REVENUE.value
+    if net_col in sales_df.columns:
+        cols["_net"] = sales_df[net_col]
+    return pd.DataFrame(cols, index=sales_df.index)
+
+
+def _points_from_agg(
+    agg_df: pd.DataFrame,
+    net_vals: list[Decimal | None],
+    granularity: TimeGranularity,
+) -> dict[date, TimeSeriesPoint]:
+    points: dict[date, TimeSeriesPoint] = {}
+    for bucket_ts, orders, items, gross_cents, net_brl in zip(
+        agg_df.index.tolist(),
+        agg_df["orders"].tolist(),
+        agg_df["items"].tolist(),
+        agg_df["gross_cents"].tolist(),
+        net_vals,
+        strict=True,
+    ):
+        bucket_date = _to_bucket_date(bucket_ts)
+        gross_brl = cents_to_brl_decimal(int(gross_cents))
+        order_cnt = int(orders)
+        points[bucket_date] = TimeSeriesPoint(
+            period_start=bucket_date,
+            granularity=granularity,
+            gross_revenue=gross_brl,
+            net_revenue=net_brl,
+            order_count=order_cnt,
+            item_count=int(items),
+            average_ticket=_compute_avg_ticket(gross_brl, order_cnt),
+        )
+    return points
+
+
 def _group_sales_by_bucket(
     sales_df: pd.DataFrame,
     granularity: TimeGranularity,
 ) -> dict[date, TimeSeriesPoint]:
     """Group active sales rows into bucket-keyed TimeSeriesPoint records."""
-    working = sales_df.copy()
-    working["_bucket"] = _compute_bucket_dates(
-        working[CanonicalField.ORDER_DATE.value],
-        granularity,
+    working = _build_bucket_frame(sales_df, granularity)
+    grouped = working.groupby("_bucket", sort=True)
+    agg_df = grouped.agg(
+        orders=("_order_key", "nunique"),
+        items=("_qty", "sum"),
+        gross_cents=("_gross", "sum"),
     )
-    points: dict[date, TimeSeriesPoint] = {}
-    for bucket_ts, group in working.groupby("_bucket", sort=True):
-        bucket_date = (
-            bucket_ts.date()
-            if isinstance(bucket_ts, pd.Timestamp)
-            else pd.Timestamp(str(bucket_ts)).date()
-        )
-        points[bucket_date] = _aggregate_group_to_point(
-            bucket_date,
-            group,
-            granularity,
-        )
-    return points
+    net_vals = extract_optional_brl_sums(
+        grouped, "_net", len(agg_df), enabled="_net" in working.columns
+    )
+    return _points_from_agg(agg_df, net_vals, granularity)
 
 
 def _fill_series_gaps(

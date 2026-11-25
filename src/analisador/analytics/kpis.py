@@ -12,6 +12,7 @@ import pandas as pd
 
 from analisador.analytics.filters import (
     DEFAULT_EXCLUDED_STATUSES,
+    build_order_key_series,
     cents_to_brl_decimal,
     count_unique_orders,
     filter_by_period,
@@ -160,33 +161,48 @@ def compute_kpis(
     return _build_kpi_summary(period_df, sales_df, period_start, period_end)
 
 
-def _coerce_status(raw_status: object) -> OrderStatus:
-    """Coerce a grouped status string into OrderStatus, falling back to OTHER."""
-    text = "" if raw_status is None else str(raw_status).strip()
-    try:
-        return OrderStatus(text)
-    except ValueError:
-        return OrderStatus.OTHER
+_VALID_STATUS_VALUES: Final[frozenset[str]] = frozenset(
+    status.value for status in OrderStatus
+)
+
+
+def _status_working_frame(period_df: pd.DataFrame) -> pd.DataFrame:
+    raw_keys = (
+        period_df[CanonicalField.STATUS.value].astype("string").fillna("").str.strip()
+    )
+    status_keys = raw_keys.where(
+        raw_keys.isin(_VALID_STATUS_VALUES), OrderStatus.OTHER.value
+    )
+    return pd.DataFrame(
+        {
+            "_status_key": status_keys,
+            "_order_key": build_order_key_series(period_df),
+            "_qty": period_df[CanonicalField.QUANTITY.value],
+            "_gross": period_df[CanonicalField.GROSS_REVENUE.value],
+        },
+        index=period_df.index,
+    )
 
 
 def _group_status_entries(
     period_df: pd.DataFrame,
 ) -> list[tuple[OrderStatus, int, int, int]]:
-    working = period_df.copy()
-    working["_status_key"] = (
-        working[CanonicalField.STATUS.value].astype("string").fillna("").str.strip()
+    working = _status_working_frame(period_df)
+    agg_df = working.groupby("_status_key", observed=True, sort=False).agg(
+        orders=("_order_key", "nunique"),
+        items=("_qty", "sum"),
+        gross_cents=("_gross", "sum"),
     )
-    entries: list[tuple[OrderStatus, int, int, int]] = []
-    for raw_status, group in working.groupby("_status_key", observed=True, sort=False):
-        entries.append(
-            (
-                _coerce_status(raw_status),
-                count_unique_orders(group),
-                int(group[CanonicalField.QUANTITY.value].sum()),
-                int(group[CanonicalField.GROSS_REVENUE.value].sum()),
-            )
+    return [
+        (OrderStatus(str(status_key)), int(orders), int(items), int(gross))
+        for status_key, orders, items, gross in zip(
+            agg_df.index.tolist(),
+            agg_df["orders"].tolist(),
+            agg_df["items"].tolist(),
+            agg_df["gross_cents"].tolist(),
+            strict=True,
         )
-    return entries
+    ]
 
 
 def _build_status_row(

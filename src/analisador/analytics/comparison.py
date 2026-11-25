@@ -126,6 +126,10 @@ def _resolve_datetime_windows(
         if isinstance(end_date, datetime)
         else datetime.combine(end_date, datetime.max.time())
     )
+    if start_ts.tzinfo is None and end_ts.tzinfo is not None:
+        start_ts = start_ts.replace(tzinfo=end_ts.tzinfo)
+    elif end_ts.tzinfo is None and start_ts.tzinfo is not None:
+        end_ts = end_ts.replace(tzinfo=start_ts.tzinfo)
     if start_ts > end_ts:
         raise ValueError(
             "A data inicial do período não pode ser posterior à data final."

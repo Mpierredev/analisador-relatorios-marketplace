@@ -7,14 +7,17 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
-from typing import Any, Final
+from typing import Final
 
 import pandas as pd
 
+from analisador.analytics._grouping import (
+    AggregatedProduct,
+    aggregate_product_metrics,
+)
 from analisador.analytics.filters import (
     DEFAULT_EXCLUDED_STATUSES,
     cents_to_brl_decimal,
-    count_unique_orders,
     filter_by_period,
     filter_sales,
     validate_canonical_dataframe,
@@ -80,18 +83,6 @@ class AbcCurveRow:
     abc_class: AbcClass
 
 
-@dataclass(frozen=True, slots=True)
-class _AggregatedProduct:
-    """Internal integer-cent intermediate aggregation per product."""
-
-    product_name: str
-    sku: str | None
-    quantity: int
-    order_count: int
-    gross_cents: int
-    net_cents: int | None
-
-
 def _coerce_metric(metric: ProductRankingMetric | str) -> ProductRankingMetric:
     if isinstance(metric, ProductRankingMetric):
         return metric
@@ -101,46 +92,13 @@ def _coerce_metric(metric: ProductRankingMetric | str) -> ProductRankingMetric:
         raise ValueError(f"Métrica de ranking inválida: {metric!r}.") from exc
 
 
-def _first_non_empty_sku(group: pd.DataFrame) -> str | None:
-    sku_col = CanonicalField.SKU.value
-    if sku_col not in group.columns:
-        return None
-    cleaned = group[sku_col].astype("string").dropna().str.strip()
-    non_empty = cleaned.loc[cleaned != ""]
-    if non_empty.empty:
-        return None
-    return str(non_empty.iloc[0])
-
-
-def _sum_group_net_cents(group: pd.DataFrame) -> int | None:
-    net_col = CanonicalField.NET_REVENUE.value
-    if net_col not in group.columns:
-        return None
-    non_null: pd.Series[Any] = group[net_col].dropna()
-    return None if non_null.empty else int(non_null.sum())
-
-
-def _group_product_metrics(working: pd.DataFrame) -> list[_AggregatedProduct]:
-    return [
-        _AggregatedProduct(
-            product_name=str(product_name),
-            sku=_first_non_empty_sku(group),
-            quantity=int(group[CanonicalField.QUANTITY.value].sum()),
-            order_count=count_unique_orders(group),
-            gross_cents=int(group[CanonicalField.GROSS_REVENUE.value].sum()),
-            net_cents=_sum_group_net_cents(group),
-        )
-        for product_name, group in working.groupby("_product_key", sort=False)
-    ]
-
-
 def _aggregate_products(
     dataframe: pd.DataFrame,
     *,
     start_date: date | datetime | None,
     end_date: date | datetime | None,
     exclude_statuses: Sequence[OrderStatus | str],
-) -> list[_AggregatedProduct]:
+) -> list[AggregatedProduct]:
     """Filter period/sales and aggregate metrics per trimmed product_name."""
     validate_canonical_dataframe(dataframe, required_fields=_PRODUCT_REQUIRED_FIELDS)
     sales_df = filter_sales(
@@ -149,15 +107,16 @@ def _aggregate_products(
     )
     if sales_df.empty:
         return []
-    working = sales_df.copy()
-    working["_product_key"] = (
-        working[CanonicalField.PRODUCT_NAME.value]
+    keys = (
+        sales_df[CanonicalField.PRODUCT_NAME.value]
         .astype("string")
         .fillna("")
         .str.strip()
     )
-    working = working.loc[working["_product_key"] != ""]
-    return [] if working.empty else _group_product_metrics(working)
+    non_empty = keys != ""
+    if not non_empty.any():
+        return []
+    return aggregate_product_metrics(sales_df, keys, non_empty)
 
 
 def _quantize_share(numerator_cents: int, total_cents: int) -> Decimal:
@@ -180,7 +139,7 @@ def _classify_abc(rank: int, raw_cumulative_share: Decimal) -> AbcClass:
 
 def _to_ranking_row(
     index: int,
-    item: _AggregatedProduct,
+    item: AggregatedProduct,
     total_cents: int,
 ) -> ProductRankingRow:
     return ProductRankingRow(
@@ -198,7 +157,7 @@ def _to_ranking_row(
 
 
 def _sort_products_by_metric(
-    products: list[_AggregatedProduct],
+    products: list[AggregatedProduct],
     metric: ProductRankingMetric,
 ) -> None:
     if metric is ProductRankingMetric.REVENUE:
@@ -240,7 +199,7 @@ def rank_products(
     ]
 
 
-def _build_abc_rows(products: list[_AggregatedProduct]) -> list[AbcCurveRow]:
+def _build_abc_rows(products: list[AggregatedProduct]) -> list[AbcCurveRow]:
     total_cents = sum(item.gross_cents for item in products)
     running_cents = 0
     curve: list[AbcCurveRow] = []

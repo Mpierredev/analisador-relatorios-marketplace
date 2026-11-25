@@ -5,10 +5,11 @@ from __future__ import annotations
 import io
 from typing import Any, Final
 
+import numpy as np
 import pandas as pd
 
-from analisador.analytics import cents_to_brl_decimal, validate_canonical_dataframe
-from analisador.core.config import UTF8_BOM_ENCODING
+from analisador.analytics import validate_canonical_dataframe
+from analisador.core.config import CENTS_PER_UNIT, UTF8_BOM_ENCODING
 from analisador.core.enums import CanonicalField
 from analisador.core.schema import CANONICAL_COLUMNS
 
@@ -22,10 +23,22 @@ _MONETARY_COLUMNS: Final[tuple[str, ...]] = (
 
 
 def _format_cents_column(series: pd.Series[Any]) -> pd.Series[Any]:
-    values = [
-        "" if pd.isna(item) else str(cents_to_brl_decimal(int(item))) for item in series
-    ]
-    return pd.Series(values, index=series.index, dtype="string")
+    if series.empty:
+        return pd.Series([], index=series.index, dtype="string")
+    numeric = pd.to_numeric(series, errors="coerce").astype("Int64")
+    valid = numeric.notna()
+    result = pd.Series("", index=series.index, dtype="string")
+    if not valid.any():
+        return result
+    vals = numeric.loc[valid].astype("int64")
+    abs_vals = vals.abs()
+    reais = (abs_vals // CENTS_PER_UNIT).astype("string")
+    centavos = (abs_vals % CENTS_PER_UNIT).astype("string").str.zfill(2)
+    signs = pd.Series(
+        np.where(vals.to_numpy() < 0, "-", ""), index=vals.index, dtype="string"
+    )
+    result.loc[valid] = signs + reais + "." + centavos
+    return result
 
 
 def export_canonical_csv(
