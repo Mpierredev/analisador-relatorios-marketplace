@@ -210,7 +210,7 @@ def render_validation_section() -> None:
     if not isinstance(raw_df, pd.DataFrame) or not isinstance(report, ValidationReport):
         return
 
-    st.subheader("3. Validação e prévia dos dados")
+    st.subheader("Validação e prévia dos dados")
     _render_status_banner(report, raw_df)
     _render_columns_and_warnings(report)
 

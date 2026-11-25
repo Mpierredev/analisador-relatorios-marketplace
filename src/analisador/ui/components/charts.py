@@ -13,16 +13,22 @@ from analisador.analytics import (
     ProductRankingMetric,
     ProductRankingRow,
     StatusDistributionRow,
+    TimeGranularity,
     TimeSeriesPoint,
 )
-from analisador.ui.formatting import STATUS_LABELS
+from analisador.ui.formatting import STATUS_LABELS, format_brl
 
 
 def build_timeseries_chart(points: Sequence[TimeSeriesPoint]) -> alt.Chart:
     """Build an interactive Altair line chart of gross revenue over time."""
+    is_monthly = bool(points) and points[0].granularity is TimeGranularity.MONTHLY
+    axis_fmt = "%m/%Y" if is_monthly else "%d/%m"
+    tip_fmt = "%m/%Y" if is_monthly else "%d/%m/%Y"
     records = [
         {
             "Periodo": pd.Timestamp(point.period_start),
+            "Data": point.period_start.strftime(tip_fmt),
+            "Faturamento": format_brl(point.gross_revenue),
             "Faturamento (R$)": float(point.gross_revenue),
             "Pedidos": point.order_count,
             "Itens": point.item_count,
@@ -34,9 +40,9 @@ def build_timeseries_chart(points: Sequence[TimeSeriesPoint]) -> alt.Chart:
         alt.Chart(frame)
         .mark_line(point=True, color="#1D4ED8")
         .encode(
-            x=alt.X("Periodo:T", title="Período"),
+            x=alt.X("Periodo:T", title="Período", axis=alt.Axis(format=axis_fmt)),
             y=alt.Y("Faturamento (R$):Q", title="Faturamento bruto (R$)"),
-            tooltip=["Periodo:T", "Faturamento (R$):Q", "Pedidos:Q", "Itens:Q"],
+            tooltip=["Data:N", "Faturamento:N", "Pedidos:Q", "Itens:Q"],
         )
         .properties(height=320)
     )
@@ -54,6 +60,7 @@ def build_top_products_chart(
     records = [
         {
             "Produto": row.product_name,
+            "Faturamento": format_brl(row.gross_revenue),
             "Faturamento (R$)": float(row.gross_revenue),
             "Quantidade": row.quantity,
             "Pedidos": row.order_count,
@@ -67,7 +74,7 @@ def build_top_products_chart(
         .encode(
             x=alt.X(f"{value_field}:Q", title=value_field),
             y=alt.Y("Produto:N", sort="-x", title="Produto"),
-            tooltip=["Produto:N", "Faturamento (R$):Q", "Quantidade:Q", "Pedidos:Q"],
+            tooltip=["Produto:N", "Faturamento:N", "Quantidade:Q", "Pedidos:Q"],
         )
         .properties(height=320)
     )
@@ -81,7 +88,7 @@ def build_status_chart(rows: Sequence[StatusDistributionRow]) -> alt.Chart:
             "Status": STATUS_LABELS.get(row.status, row.status.value),
             "Pedidos": row.order_count,
             "Participação (%)": round(row.order_share * 100, 1),
-            "Faturamento (R$)": float(row.gross_revenue),
+            "Faturamento": format_brl(row.gross_revenue),
         }
         for row in rows
     ]
@@ -93,14 +100,9 @@ def build_status_chart(rows: Sequence[StatusDistributionRow]) -> alt.Chart:
             x=alt.X("Status:N", sort="-y", title="Status"),
             y=alt.Y("Pedidos:Q", title="Pedidos"),
             color=alt.Color("Status:N", legend=None),
-            tooltip=[
-                "Status:N",
-                "Pedidos:Q",
-                "Participação (%):Q",
-                "Faturamento (R$):Q",
-            ],
+            tooltip=["Status:N", "Pedidos:Q", "Participação (%):Q", "Faturamento:N"],
         )
-        .properties(height=300)
+        .properties(height=320)
     )
     return cast(alt.Chart, chart)
 
@@ -117,6 +119,7 @@ def build_abc_chart(rows: Sequence[AbcCurveRow]) -> alt.Chart:
         [
             {
                 "Produto": row.product_name,
+                "Faturamento": format_brl(row.gross_revenue),
                 "Faturamento (R$)": float(row.gross_revenue),
                 "Acumulado (%)": round(float(row.cumulative_share) * 100, 1),
                 "Classe ABC": f"Classe {row.abc_class.value}",
@@ -131,12 +134,7 @@ def build_abc_chart(rows: Sequence[AbcCurveRow]) -> alt.Chart:
             x=alt.X("Produto:N", sort="-y", title="Produto"),
             y=alt.Y("Faturamento (R$):Q", title="Faturamento bruto (R$)"),
             color=alt.Color("Classe ABC:N", scale=_ABC_COLOR_SCALE),
-            tooltip=[
-                "Produto:N",
-                "Classe ABC:N",
-                "Faturamento (R$):Q",
-                "Acumulado (%):Q",
-            ],
+            tooltip=["Produto:N", "Classe ABC:N", "Faturamento:N", "Acumulado (%):Q"],
         )
         .properties(height=320)
     )

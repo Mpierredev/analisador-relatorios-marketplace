@@ -14,6 +14,7 @@ from analisador.ui.components import (
 )
 from analisador.ui.services import UiError
 from analisador.ui.state import (
+    STATE_FILE_NAME,
     STATE_LAST_ERROR,
     WorkflowStage,
     get_workflow_stage,
@@ -21,26 +22,36 @@ from analisador.ui.state import (
 )
 
 _STAGE_LABELS: Final[dict[WorkflowStage, str]] = {
-    WorkflowStage.WAITING_FILE: "Etapa atual: aguardando envio do arquivo",
-    WorkflowStage.VALIDATION_PENDING: "Etapa atual: validação pendente",
-    WorkflowStage.VALIDATED: "Etapa atual: validado (pronto para gerar dashboard)",
-    WorkflowStage.DASHBOARD_READY: "Etapa atual: dashboard liberado",
+    WorkflowStage.WAITING_FILE: "Envie uma planilha ou carregue um exemplo pronto",
+    WorkflowStage.VALIDATION_PENDING: (
+        "Validação pendente — confira as colunas mapeadas"
+    ),
+    WorkflowStage.VALIDATED: "Arquivo validado — pronto para gerar o painel",
+    WorkflowStage.DASHBOARD_READY: "Painel ativo em memória",
 }
 
 
 def render_analyze_page() -> None:
     """Render the sequential upload, validation, mapping, and dashboard page."""
     init_session_state()
+    stage = get_workflow_stage()
     st.title("Analisar relatório de vendas")
-    st.caption(_STAGE_LABELS[get_workflow_stage()])
+    st.caption(_STAGE_LABELS[stage])
 
-    render_upload_controls()
     last_error = st.session_state.get(STATE_LAST_ERROR)
     if isinstance(last_error, UiError):
         render_ui_error(last_error)
 
+    if stage is WorkflowStage.DASHBOARD_READY:
+        file_name = st.session_state.get(STATE_FILE_NAME) or "relatório atual"
+        with st.expander(f"Arquivo carregado: {file_name}", expanded=False):
+            render_upload_controls()
+            render_validation_section()
+        render_dashboard_section()
+        return
+
+    render_upload_controls()
     render_validation_section()
-    render_dashboard_section()
 
 
 __all__ = ["render_analyze_page"]

@@ -18,6 +18,7 @@ from analisador.ui.components.charts import (
     build_timeseries_chart,
     build_top_products_chart,
 )
+from analisador.ui.components.dashboard import _active_comparison
 from analisador.ui.services import (
     compute_dashboard_bundle_cached,
     generate_normalized_result,
@@ -122,10 +123,11 @@ def test_cached_dashboard_bundle_and_chart_builders() -> None:
     assert len(bundle.abc_curve) == 2
     assert len(bundle.status_distribution) == 2
 
-    # Charts convert cleanly to Vega-Lite specs
-    assert (
-        build_timeseries_chart(bundle.time_series).to_dict()["mark"]["type"] == "line"
-    )
+    # Charts convert cleanly to Vega-Lite specs with Brazilian axis formats
+    ts_spec = build_timeseries_chart(bundle.time_series).to_dict()
+    assert ts_spec["mark"]["type"] == "line"
+    assert ts_spec["encoding"]["x"]["axis"]["format"] == "%d/%m"
+    assert _active_comparison(bundle) is None
     assert (
         build_top_products_chart(
             bundle.top_products,
@@ -152,6 +154,8 @@ def test_cached_dashboard_bundle_and_chart_builders() -> None:
     assert filtered_bundle.kpis.gross_revenue == Decimal("300.00")
     assert len(filtered_bundle.top_products) == 1
     assert CanonicalField.PRODUCT_NAME.value in normalized.dataframe.columns
+    monthly_spec = build_timeseries_chart(filtered_bundle.time_series).to_dict()
+    assert monthly_spec["encoding"]["x"]["axis"]["format"] == "%m/%Y"
 
     # Changing cache_key prevents reusing cached outputs across sessions/datasets
     other_df = normalized.dataframe.iloc[:1].copy()

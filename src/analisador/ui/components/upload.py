@@ -180,7 +180,7 @@ def _render_format_row(options: list[tuple[str, str]]) -> str:
     col_fmt, col_action = st.columns([4, 1], vertical_alignment="bottom")
     with col_fmt:
         chosen = st.selectbox(
-            "1. Escolha o formato do relatório",
+            "Formato do relatório",
             options=option_keys,
             format_func=lambda key: labels_by_key[key],
             key=STATE_SELECTED_FORMAT,
@@ -200,7 +200,7 @@ def render_upload_controls() -> None:
         _handle_format_change(chosen)
 
     uploaded = st.file_uploader(
-        "2. Envie a planilha de vendas (.csv ou .xlsx)",
+        "Planilha de vendas (.csv ou .xlsx)",
         type=["csv", "xlsx"],
         key="widget_report_file",
     )

@@ -13,11 +13,12 @@ from analisador.core.config import (
 
 _PRIVACY_BULLETS = "\n".join(
     (
-        "- Os arquivos enviados são lidos apenas em memória na sessão.",
-        "- Nenhum dado de comprador, endereço, documento ou conteúdo de "
-        "planilha é gravado em disco ou registrado em logs.",
-        "- O cache analítico guarda apenas dados canônicos sem "
-        "identificadores pessoais, com limite de entradas e expiração.",
+        "- Arquivos enviados ficam apenas na memória da sessão e nunca "
+        "são salvos em disco.",
+        "- Colunas com dados pessoais de compradores são descartadas na "
+        "normalização e nunca entram nos logs.",
+        "- O cache analítico guarda apenas agregações do esquema canônico, "
+        "isoladas por sessão e expiradas em poucos minutos.",
     )
 )
 
@@ -26,27 +27,26 @@ def render_about_page() -> None:
     """Render architecture overview, operational limits, and privacy policy."""
     st.title("Sobre o Analisador")
     st.write(
-        "Aplicação aberta para validação estrutural, normalização e análise de "
-        "relatórios de vendas de marketplaces sem depender de banco de dados "
-        "ou APIs externas."
+        "Ferramenta aberta para validar, padronizar e explorar relatórios de vendas "
+        "exportados de marketplaces sem precisar de banco de dados ou APIs externas."
     )
-    st.subheader("Privacidade e processamento em memória")
+    st.subheader("Privacidade")
     st.markdown(_PRIVACY_BULLETS)
 
     st.subheader("Limites operacionais")
     max_rows_fmt = f"{MAX_ROWS:,}".replace(",", ".")
     limits_md = (
-        f"- **Tamanho máximo por arquivo:** {MAX_FILE_SIZE_MB} MB.\n"
-        f"- **Quantidade máxima de linhas:** {max_rows_fmt}.\n"
-        f"- **Cache analítico:** até {CACHE_MAX_ENTRIES} entradas "
+        f"- **Tamanho máximo:** {MAX_FILE_SIZE_MB} MB por arquivo.\n"
+        f"- **Linhas máximas:** {max_rows_fmt} linhas por planilha.\n"
+        f"- **Cache da sessão:** até {CACHE_MAX_ENTRIES} visões filtradas "
         f"por até {CACHE_TTL_SECONDS} segundos."
     )
     st.markdown(limits_md)
 
-    st.subheader("Arquitetura em camadas")
+    st.subheader("Fluxo de processamento")
     st.markdown(
         "`ingestão` → `adapters` → `validação` → `normalização` → "
-        "`análises` → `interface Streamlit`"
+        "`análises` → `painel e exportação`"
     )
 
 
