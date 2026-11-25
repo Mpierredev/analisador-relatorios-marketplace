@@ -102,6 +102,7 @@ def test_export_summary_excel_creates_five_formatted_sheets() -> None:
             "Top Produtos",
             "Curva ABC",
             "Status e Qualidade",
+            "Diagnóstico Financeiro",
         ]
         kpi_sheet: Any = wb["Resumo KPIs"]
         kpi_values = {
@@ -117,6 +118,17 @@ def test_export_summary_excel_creates_five_formatted_sheets() -> None:
         abc_rows = list(abc_sheet.iter_rows(min_row=2, values_only=True))
         assert abc_rows[0][1] == "Teclado RGB"
         assert abc_rows[0][7] == "A"
+
+        diag_sheet: Any = wb["Diagnóstico Financeiro"]
+        diag_rows = list(diag_sheet.iter_rows(min_row=1, values_only=True))
+        assert diag_rows[0][:3] == (
+            "Indicador financeiro",
+            "Valor (R$)",
+            "% sobre bruto",
+        )
+        assert Decimal(str(diag_rows[1][1])) == Decimal("300.0")
+        assert any(row and row[0] == "Seg" for row in diag_rows)
+        assert any(row and row[0] == "Teclado RGB" for row in diag_rows)
     finally:
         wb.close()
 

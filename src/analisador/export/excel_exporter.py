@@ -10,16 +10,20 @@ from openpyxl import Workbook
 
 from analisador.analytics import (
     TimeGranularity,
+    analyze_product_diagnostics,
     build_time_series,
     compute_abc_curve,
+    compute_financial_breakdown,
     compute_kpis,
     compute_status_distribution,
+    compute_weekday_sales,
     rank_products,
     validate_canonical_dataframe,
 )
 from analisador.core.config import DEFAULT_TOP_PRODUCTS_LIMIT
 from analisador.core.enums import NetRevenueSource
 from analisador.core.models import QualityReport
+from analisador.export.excel_diagnostics import write_diagnostics_sheet
 from analisador.export.excel_sheets import (
     write_abc_sheet,
     write_kpi_sheet,
@@ -27,6 +31,30 @@ from analisador.export.excel_sheets import (
     write_status_and_quality_sheet,
     write_timeseries_sheet,
 )
+
+
+def _write_core_sheets(
+    workbook: Workbook,
+    canonical_df: pd.DataFrame,
+    net_revenue_source: NetRevenueSource,
+    start_date: date | None,
+    end_date: date | None,
+) -> None:
+    kpis = compute_kpis(canonical_df, start_date=start_date, end_date=end_date)
+    series = build_time_series(
+        canonical_df, TimeGranularity.DAILY, start_date=start_date, end_date=end_date
+    )
+    top = rank_products(
+        canonical_df,
+        limit=DEFAULT_TOP_PRODUCTS_LIMIT,
+        start_date=start_date,
+        end_date=end_date,
+    )
+    abc = compute_abc_curve(canonical_df, start_date=start_date, end_date=end_date)
+    write_kpi_sheet(workbook, kpis, net_revenue_source)
+    write_timeseries_sheet(workbook, series)
+    write_products_sheet(workbook, top)
+    write_abc_sheet(workbook, abc)
 
 
 def _populate_workbook(
@@ -37,25 +65,21 @@ def _populate_workbook(
     start_date: date | None,
     end_date: date | None,
 ) -> None:
-    kpis = compute_kpis(canonical_df, start_date=start_date, end_date=end_date)
-    series = build_time_series(
-        canonical_df, TimeGranularity.DAILY, start_date=start_date, end_date=end_date
-    )
-    top_products = rank_products(
-        canonical_df,
-        limit=DEFAULT_TOP_PRODUCTS_LIMIT,
-        start_date=start_date,
-        end_date=end_date,
-    )
-    abc_rows = compute_abc_curve(canonical_df, start_date=start_date, end_date=end_date)
+    _write_core_sheets(workbook, canonical_df, net_revenue_source, start_date, end_date)
     statuses = compute_status_distribution(
         canonical_df, start_date=start_date, end_date=end_date
     )
-    write_kpi_sheet(workbook, kpis, net_revenue_source)
-    write_timeseries_sheet(workbook, series)
-    write_products_sheet(workbook, top_products)
-    write_abc_sheet(workbook, abc_rows)
     write_status_and_quality_sheet(workbook, statuses, quality_report)
+    breakdown = compute_financial_breakdown(
+        canonical_df, start_date=start_date, end_date=end_date
+    )
+    diagnostics = analyze_product_diagnostics(
+        canonical_df, start_date=start_date, end_date=end_date
+    )
+    weekdays = compute_weekday_sales(
+        canonical_df, start_date=start_date, end_date=end_date
+    )
+    write_diagnostics_sheet(workbook, breakdown, diagnostics, weekdays)
 
 
 def export_summary_excel(
