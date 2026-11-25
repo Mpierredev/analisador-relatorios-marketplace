@@ -35,7 +35,11 @@ from analisador.ui.services import (
     compute_dashboard_bundle_cached,
     translate_exception,
 )
-from analisador.ui.state import STATE_DASHBOARD_ENABLED, STATE_NORMALIZED_RESULT
+from analisador.ui.state import (
+    STATE_DASHBOARD_ENABLED,
+    STATE_NORMALIZED_RESULT,
+    build_dashboard_cache_key,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -245,6 +249,7 @@ def _render_filtered_dashboard(result: NormalizationResult) -> None:
     try:
         bundle = compute_dashboard_bundle_cached(
             result.dataframe,
+            build_dashboard_cache_key(),
             filters.start_date,
             filters.end_date,
             filters.statuses,

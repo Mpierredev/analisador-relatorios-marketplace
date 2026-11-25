@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import secrets
 from collections.abc import Mapping
 from enum import StrEnum
 from typing import Any, Final
@@ -27,6 +28,7 @@ STATE_VALIDATION_REPORT: Final[str] = "analisador.validation_report"
 STATE_DASHBOARD_ENABLED: Final[str] = "analisador.dashboard_enabled"
 STATE_NORMALIZED_RESULT: Final[str] = "analisador.normalized_result"
 STATE_LAST_ERROR: Final[str] = "analisador.last_error"
+STATE_SESSION_NONCE: Final[str] = "analisador.session_nonce"
 
 
 class WorkflowStage(StrEnum):
@@ -53,6 +55,7 @@ def init_session_state() -> None:
     """Ensure all workflow session keys exist with deterministic defaults."""
     default_fmt = _default_format_key()
     defaults: dict[str, Any] = {
+        STATE_SESSION_NONCE: secrets.token_hex(8),
         STATE_SELECTED_FORMAT: default_fmt,
         STATE_PREVIOUS_FORMAT: default_fmt,
         STATE_UPLOAD_SIGNATURE: None,
@@ -98,6 +101,20 @@ def set_manual_mapping(mapping: Mapping[CanonicalField, str]) -> None:
     reset_dashboard_state()
 
 
+def build_dashboard_cache_key() -> str:
+    """Build a per-session key isolating cached dashboard metrics."""
+    nonce = str(st.session_state.get(STATE_SESSION_NONCE) or "")
+    signature = str(st.session_state.get(STATE_UPLOAD_SIGNATURE) or "")
+    selected_format = str(st.session_state.get(STATE_SELECTED_FORMAT) or "")
+    selected_sheet = str(st.session_state.get(STATE_SELECTED_SHEET) or "")
+    raw_mapping = st.session_state.get(STATE_MANUAL_MAPPING) or {}
+    mapping_items = ",".join(
+        f"{field.value}={raw_mapping[field]}"
+        for field in sorted(raw_mapping, key=lambda item: item.value)
+    )
+    return "|".join((nonce, signature, selected_format, selected_sheet, mapping_items))
+
+
 def get_workflow_stage() -> WorkflowStage:
     """Determine the current explicit stage from session state."""
     if st.session_state.get(STATE_RAW_DF) is None:
@@ -123,9 +140,11 @@ __all__ = [
     "STATE_RAW_DF",
     "STATE_SELECTED_FORMAT",
     "STATE_SELECTED_SHEET",
+    "STATE_SESSION_NONCE",
     "STATE_UPLOAD_SIGNATURE",
     "STATE_VALIDATION_REPORT",
     "WorkflowStage",
+    "build_dashboard_cache_key",
     "compute_file_signature",
     "get_workflow_stage",
     "init_session_state",

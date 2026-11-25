@@ -107,6 +107,7 @@ def test_cached_dashboard_bundle_and_chart_builders() -> None:
 
     bundle = compute_dashboard_bundle_cached(
         normalized.dataframe,
+        "sessao-1:sig-a:mercado_livre",
         date(2025, 3, 1),
         date(2025, 3, 4),
         (OrderStatus.COMPLETED.value, OrderStatus.CANCELLED.value),
@@ -140,6 +141,7 @@ def test_cached_dashboard_bundle_and_chart_builders() -> None:
 
     filtered_bundle = compute_dashboard_bundle_cached(
         normalized.dataframe,
+        "sessao-1:sig-a:mercado_livre",
         None,
         None,
         (OrderStatus.COMPLETED.value,),
@@ -150,3 +152,17 @@ def test_cached_dashboard_bundle_and_chart_builders() -> None:
     assert filtered_bundle.kpis.gross_revenue == Decimal("300.00")
     assert len(filtered_bundle.top_products) == 1
     assert CanonicalField.PRODUCT_NAME.value in normalized.dataframe.columns
+
+    # Changing cache_key prevents reusing cached outputs across sessions/datasets
+    other_df = normalized.dataframe.iloc[:1].copy()
+    isolated_bundle = compute_dashboard_bundle_cached(
+        other_df,
+        "sessao-2:sig-b:mercado_livre",
+        date(2025, 3, 1),
+        date(2025, 3, 4),
+        (OrderStatus.COMPLETED.value, OrderStatus.CANCELLED.value),
+        "",
+        TimeGranularity.DAILY.value,
+        ProductRankingMetric.REVENUE.value,
+    )
+    assert isolated_bundle.kpis.gross_revenue == Decimal("300.00")

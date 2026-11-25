@@ -200,7 +200,8 @@ def _build_dashboard_bundle(
     show_spinner=False,
 )
 def compute_dashboard_bundle_cached(
-    canonical_df: pd.DataFrame,
+    _canonical_df: pd.DataFrame,
+    cache_key: str,
     start_date: date | None,
     end_date: date | None,
     selected_statuses: tuple[str, ...],
@@ -208,9 +209,10 @@ def compute_dashboard_bundle_cached(
     granularity: str,
     ranking_metric: str,
 ) -> DashboardBundle:
-    """Compute bounded-cache dashboard metrics over canonical (non-PII) records."""
+    """Compute bounded-cache dashboard metrics keyed by session/dataset fingerprint."""
+    _ = cache_key
     entity_df = _apply_status_and_product_filters(
-        canonical_df,
+        _canonical_df,
         selected_statuses,
         product_query,
     )

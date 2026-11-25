@@ -179,6 +179,7 @@ def _handle_generate_click(raw_df: pd.DataFrame, report: ValidationReport) -> No
     except Exception as exc:
         reset_dashboard_state()
         st.session_state[STATE_LAST_ERROR] = translate_exception(exc)
+    st.rerun()
 
 
 def _render_generate_button(raw_df: pd.DataFrame) -> None:
