@@ -6,10 +6,16 @@ from io import BytesIO
 from pathlib import Path
 
 import pandas as pd
+import pytest
 from streamlit.testing.v1 import AppTest
 
-from analisador.core.enums import CanonicalField, Marketplace
-from analisador.core.errors import UnsupportedFileError
+from analisador.core.enums import CanonicalField, Marketplace, ValidationStatus
+from analisador.core.errors import (
+    FileTooLargeError,
+    HeaderNotFoundError,
+    ReportError,
+    UnsupportedFileError,
+)
 from analisador.ui.samples import list_sample_assets, load_sample_bytes
 from analisador.ui.services import (
     generate_normalized_result,
@@ -235,3 +241,95 @@ def test_bundled_samples_validate_one_click_demo_and_help_downloads() -> None:
 
     help_page = AppTest.from_function(_run_how_to_export_page, default_timeout=15).run()
     assert not help_page.exception
+
+
+def test_five_mandatory_error_scenarios_render_friendly_portuguese_guidance(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # 1) Extensão não suportada / XLSX corrompido
+    for bad_payload, bad_name in (
+        (b"conteudo qualquer", "relatorio.pdf"),
+        (b"corrompido", "quebrado.xlsx"),
+    ):
+        with pytest.raises(UnsupportedFileError) as exc_info:
+            process_uploaded_file(
+                bad_payload, bad_name, Marketplace.MERCADO_LIVRE.value
+            )
+        ui_err = translate_exception(exc_info.value)
+        at = AppTest.from_function(_run_analyze_page, default_timeout=15).run()
+        at.session_state[STATE_LAST_ERROR] = ui_err
+        at.run()
+        assert not at.exception
+        assert len(at.error) == 1
+        assert "Traceback" not in at.error[0].value
+        assert ui_err.suggestion in at.info[0].value
+
+    # 2) Arquivo vazio ou sem cabeçalho identificável
+    with pytest.raises(HeaderNotFoundError) as empty_exc:
+        process_uploaded_file(
+            b"\n\n   \n", "vazio.csv", Marketplace.MERCADO_LIVRE.value
+        )
+    ui_empty = translate_exception(empty_exc.value)
+    at_empty = AppTest.from_function(_run_analyze_page, default_timeout=15).run()
+    at_empty.session_state[STATE_LAST_ERROR] = ui_empty
+    at_empty.run()
+    assert not at_empty.exception
+    assert ui_empty.message in at_empty.error[0].value
+    assert "Traceback" not in at_empty.error[0].value
+
+    # 3) Arquivo acima do limite de tamanho/linhas (simulado via limite reduzido)
+    from analisador.ingestion import read_report as orig_read_report
+
+    monkeypatch.setattr(
+        "analisador.ui.services.read_report",
+        lambda content, filename, *, sheet_name=None: orig_read_report(
+            content, filename, sheet_name=sheet_name, max_file_size_bytes=32
+        ),
+    )
+    with pytest.raises(FileTooLargeError) as size_exc:
+        process_uploaded_file(
+            b"a;b;c\n" * 20, "grande.csv", Marketplace.MERCADO_LIVRE.value
+        )
+    monkeypatch.undo()
+    ui_size = translate_exception(size_exc.value)
+    assert isinstance(size_exc.value, ReportError)
+    at_size = AppTest.from_function(_run_analyze_page, default_timeout=15).run()
+    at_size.session_state[STATE_LAST_ERROR] = ui_size
+    at_size.run()
+    assert not at_size.exception
+    assert ui_size.message in at_size.error[0].value
+
+    # 4) Colunas obrigatórias ausentes / arquivo de outro marketplace
+    unknown_csv = b"col_a;col_b;col_c\n1;2;3\n"
+    _, unrecognized = process_uploaded_file(
+        unknown_csv, "outro_marketplace.csv", Marketplace.MERCADO_LIVRE.value
+    )
+    assert unrecognized.status is ValidationStatus.UNRECOGNIZED
+    assert unrecognized.can_generate_dashboard is False
+
+    # 5) Cabeçalho válido, porém 100% das linhas inválidas ao gerar dashboard
+    invalid_rows_csv = (
+        "Data da venda;Título do anúncio;Unidades;Receita por produtos\n"
+        "data-invalida;Produto Teste;0;valor-invalido\n"
+        "31/02/2025;Outro Produto;-3;abc\n"
+    ).encode()
+    inv_df, inv_report = process_uploaded_file(
+        invalid_rows_csv, "linhas_invalidas.csv", Marketplace.MERCADO_LIVRE.value
+    )
+    assert inv_report.can_generate_dashboard is True
+    at_norm = AppTest.from_function(_run_analyze_page, default_timeout=15).run()
+    at_norm.session_state[STATE_SELECTED_FORMAT] = Marketplace.MERCADO_LIVRE.value
+    at_norm.session_state[STATE_UPLOAD_SIGNATURE] = compute_file_signature(
+        "linhas_invalidas.csv", invalid_rows_csv
+    )
+    at_norm.session_state[STATE_FILE_NAME] = "linhas_invalidas.csv"
+    at_norm.session_state[STATE_RAW_DF] = inv_df
+    at_norm.session_state[STATE_VALIDATION_REPORT] = inv_report
+    at_norm.run()
+    assert at_norm.button(key="btn_generate_dashboard").disabled is False
+    at_norm.button(key="btn_generate_dashboard").click().run()
+    assert not at_norm.exception
+    assert at_norm.session_state[STATE_DASHBOARD_ENABLED] is False
+    assert len(at_norm.error) == 1
+    assert "Nenhuma linha válida restou" in at_norm.error[0].value
+    assert "Traceback" not in at_norm.error[0].value

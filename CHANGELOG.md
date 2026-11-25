@@ -9,6 +9,9 @@ e este projeto adota o [Versionamento Semântico](https://semver.org/lang/pt-BR/
 
 ### Adicionado
 
+- Script de benchmark sintético (`scripts/benchmark_desempenho.py`) para medição de latência por etapa, pico de alocação e RSS até 200.000 linhas e alta cardinalidade de SKUs.
+- Checklist documentado e testes de integração dos cinco cenários obrigatórios de erro na interface (`docs/checklist-cenarios-erro.md`).
+- Suíte de regressão de privacidade, logs em nível `DEBUG` e zero escrita em disco (`tests/unit/test_privacy_and_logs.py`).
 - Camada de exportação em memória (`src/analisador/export/`) para geração de CSV canônico e workbook Excel gerencial de cinco abas (`Resumo KPIs`, `Série Temporal`, `Top Produtos`, `Curva ABC` e `Status e Qualidade`), com botões de download no dashboard.
 - Amostras sintéticas em `samples/` (`scripts/gerar_amostras.py`) disponíveis para carregamento em um clique na aba `Analisar` e download na página `Como exportar`.
 - Classificação declarativa de maturidade de adapters (`AdapterSupportTier`: `verificado` e `experimental`), identificação da origem da receita líquida (`NetRevenueSource`) e seleção explícita de abas em planilhas `.xlsx` multi-aba (`list_xlsx_sheets` e parâmetro `sheet_name`).
@@ -47,4 +50,6 @@ e este projeto adota o [Versionamento Semântico](https://semver.org/lang/pt-BR/
 
 ### Alterado
 
+- Agregações de `analytics/` (`kpis.py`, `timeseries.py`, `products.py`), formatação monetária do exportador CSV (`export/csv_exporter.py`) e compactação de tipos canônicos (`normalization/dtypes.py`) vetorizados com ganhos de até 43,9x em alta cardinalidade e até 37,8% menos uso de memória.
+- Cache do dashboard isolado por sessão via `STATE_SESSION_NONCE` e chave de dataset (`build_dashboard_cache_key`), evitando re-hashing completo do DataFrame a cada alteração de filtro; corrigido também o alinhamento de fuso horário em limites mistos (`date` e `datetime`) em `comparison.py` e o redesenho imediato ao falhar ou concluir o botão `Gerar dashboard` em `validation_view.py`.
 - Documentação pública do projeto movida para `docs/README.md`, mantendo apenas documentação geral pública fora do planejamento local.
