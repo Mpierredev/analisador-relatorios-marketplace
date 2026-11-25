@@ -22,8 +22,8 @@ Construí esta ferramenta para automatizar a limpeza, validação e análise des
 - Lê arquivos `.csv` e `.xlsx` em memória, identificando encoding, delimitador, aba e linha de cabeçalho.
 - Valida colunas obrigatórias contra formatos conhecidos e libera um mapeamento manual assistido para planilhas fora do padrão.
 - Padroniza datas para `America/Sao_Paulo`, converte valores monetários para centavos inteiros (`int64`) e gera diagnóstico de duplicidades, nulos, datas inválidas e *outliers*.
-- Calcula faturamento bruto, receita líquida (indicando quando é informada pela planilha ou derivada de taxas e frete), ticket médio, cancelamentos, séries temporais, ranking de produtos e Curva ABC.
-- Exporta os dados tratados em CSV (com BOM para Excel) e gera um resumo gerencial em `.xlsx` com cinco abas.
+- Calcula faturamento bruto, receita líquida (indicando quando é informada pela planilha ou derivada de taxas e frete), raio-X de taxas e envio, ticket médio, cancelamentos, padrões por dia da semana e hora, séries temporais, radar de produtos, ranking e Curva ABC em gráfico de Pareto.
+- Exporta os dados tratados em CSV (com BOM para Excel) e gera um resumo gerencial em `.xlsx` com seis abas (incluindo `Diagnóstico Financeiro`).
 
 ## Como rodar localmente
 

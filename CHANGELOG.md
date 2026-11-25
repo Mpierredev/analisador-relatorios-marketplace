@@ -9,12 +9,17 @@ e este projeto adota o [Versionamento Semântico](https://semver.org/lang/pt-BR/
 
 ### Adicionado
 
+- Raio-X financeiro (`compute_financial_breakdown`) com decomposição de faturamento bruto, taxas, custos de envio, receita líquida, cancelamentos e devoluções em `src/analisador/analytics/diagnostics.py`.
+- Radar de margem líquida e taxa de cancelamento por produto (`analyze_product_diagnostics`), além de padrões temporais por dia da semana e hora do dia em `America/Sao_Paulo` (`compute_weekday_sales` e `compute_hourly_sales` em `src/analisador/analytics/patterns.py`).
+- Sexta aba `Diagnóstico Financeiro` na exportação Excel (`src/analisador/export/excel_diagnostics.py`).
 - Publicação no Streamlit Community Cloud (`https://dashboardmaker.streamlit.app/`) e link direto da demonstração ao vivo no `README.md`.
 - Arquivos `requirements.txt` (dependências com versões fixadas e instalação local `-e .`) e `runtime.txt` (`python-3.12`) para deploy no Streamlit Community Cloud.
 
 ### Alterado
 
-- Gráficos de série temporal e tooltips em Altair formatados em `pt-BR` (`%d/%m` e `%m/%Y`), painel principal organizado em abas (`Visão geral`, `Produtos e Curva ABC`, `Qualidade e exportação`), bloco de upload recolhido após gerar o painel e deltas comparativos exibidos apenas quando há base no período anterior.
+- Painel principal reorganizado em quatro abas (`Visão geral`, `Financeiro e horários`, `Produtos e Curva ABC`, `Qualidade e exportação`) e Curva ABC evoluída para gráfico de Pareto em eixo duplo com linha de acumulado (%) e corte de 80%.
+- Página `Sobre` enxugada com remoção do bloco técnico de fluxo/camadas de arquitetura.
+- Gráficos de série temporal e tooltips em Altair formatados em `pt-BR` (`%d/%m` e `%m/%Y`), bloco de upload recolhido após gerar o painel e deltas comparativos exibidos apenas quando há base no período anterior.
 - Resolução do diretório `samples/` em `src/analisador/ui/samples.py` passou a incluir *fallback* para `Path.cwd() / "samples"`, garantindo funcionamento em instalações não editáveis e em ambientes de nuvem.
 - `README.md` reescrito em formato direto com captura atualizada em `docs/assets/dashboard.png` e organização dos testes por domínio.
 

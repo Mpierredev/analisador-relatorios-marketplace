@@ -12,7 +12,7 @@ As dependências apontam sempre para o núcleo (`core/`). Nenhuma camada interna
 flowchart TD
     APP["app.py (Ponto de entrada Streamlit)"] --> UI["ui/ (Páginas, componentes, estado e cache)"]
     UI --> EXP["export/ (CSV e Excel em memória)"]
-    UI --> ANA["analytics/ (KPIs, séries, rankings, ABC, comparação)"]
+    UI --> ANA["analytics/ (KPIs, séries, Pareto, diagnósticos, padrões)"]
     UI --> NORM["normalization/ (Datas, moeda, status, qualidade, dtypes)"]
     UI --> VAL["validation/ (Detecção, validação e sugestão manual)"]
     UI --> ING["ingestion/ (Leitura CSV/XLSX em memória)"]
@@ -49,9 +49,9 @@ flowchart TD
 | **Adapters** | `src/analisador/adapters/` | Contrato imutável `MarketplaceAdapter`, normalização de cabeçalhos/status, registro (`registry.py`) e definições declarativas (`mercado_livre.py`, `shopee.py`). |
 | **Validação** | `src/analisador/validation/` | Pontuação de similaridade contra adapters, diagnóstico de colunas ausentes/extras, inferência de tipo por amostra (`types.py`), sugestão automática de mapeamento (`suggestions.py`) e trava `ensure_can_generate_dashboard`. |
 | **Normalização** | `src/analisador/normalization/` | Parsers vetorizados de moeda BRL/US em centavos (`currency*.py`), datas BR/ISO/extenso (`dates.py`), quantidades/status/derivação de receita líquida (`fields.py`), relatório de qualidade com outliers IQR (`quality.py`) e compactação de tipos (`dtypes.py`). |
-| **Análises** | `src/analisador/analytics/` | Filtros de período/status e chave única de pedidos (`filters.py`), helpers vetorizados (`_grouping.py`), KPIs e distribuição de status (`kpis.py`), séries temporais (`timeseries.py`), ranking e Curva ABC (`products.py`) e comparação entre períodos (`comparison.py`). |
-| **Exportação** | `src/analisador/export/` | CSV canônico vetorizado com BOM opcional (`csv_exporter.py`) e workbook Excel formatado em 5 abas (`excel_exporter.py`, `excel_sheets.py`). |
-| **Interface** | `app.py` e `src/analisador/ui/` | Navegação multipágina (`Analisar`, `Formatos suportados`, `Como exportar`, `Sobre`), máquina de estados explícita (`state.py`), orquestração com cache isolado (`services.py`), tradução amigável de erros (`errors.py`) e gráficos Altair (`charts.py`). |
+| **Análises** | `src/analisador/analytics/` | Filtros de período/status e chave única de pedidos (`filters.py`), helpers vetorizados (`_grouping.py`), KPIs e distribuição de status (`kpis.py`), séries temporais (`timeseries.py`), ranking e Curva ABC (`products.py`), comparação entre períodos (`comparison.py`), raio-X financeiro e radar por produto (`diagnostics.py`) e padrões por dia/hora (`patterns.py`). |
+| **Exportação** | `src/analisador/export/` | CSV canônico vetorizado com BOM opcional (`csv_exporter.py`) e workbook Excel formatado em 6 abas (`excel_exporter.py`, `excel_sheets.py`, `excel_diagnostics.py`). |
+| **Interface** | `app.py` e `src/analisador/ui/` | Navegação multipágina (`Analisar`, `Formatos suportados`, `Como exportar`, `Sobre`), máquina de estados explícita (`state.py`), orquestração com cache isolado (`services.py`), tradução amigável de erros (`errors.py`) e gráficos Altair (`charts.py`, `charts_diagnostics.py`). |
 
 ---
 
@@ -67,7 +67,7 @@ flowchart LR
     N --> DF["DataFrame Canônico + QualityReport"]
     DF --> A["analytics.* (KPIs, Séries, Ranking, ABC, Status)"]
     A --> UI["Dashboard Streamlit + Altair"]
-    DF --> EXP["CSV Canônico / Excel 5 abas"]
+    DF --> EXP["CSV Canônico / Excel 6 abas"]
     A --> EXP
 ```
 
